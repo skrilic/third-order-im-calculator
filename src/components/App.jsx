@@ -20,30 +20,25 @@ function App() {
     });
   }
 
+  function deleteStation(stationId) {
+
+    setStationList(prevStations => {
+      return prevStations.filter((station, index) => {
+        return index !== stationId;
+      })
+    });
+  }
+
+
   function handleSubmit(event) {
 		event.preventDefault();
 	}
 
   return (
     <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
       <CreateStation onAdd={addStation}/>
-      <form onSubmit={handleSubmit}>
-      <table id="stations">
-        <tbody>
-        <tr><th></th><th></th><th></th></tr>
+      <form className="App-stations-list" onSubmit={handleSubmit}>
+      <ul>
         {stationList.map((station, index) => {
           return (
               (station.frequency.toString().trim() !== "") ?
@@ -52,11 +47,11 @@ function App() {
                 id={index}
                 stationName={station.name}
                 stationFrequency={station.frequency}
+                onDelete={deleteStation}
               /> : null
             )
         })}
-        </tbody>
-      </table>
+      </ul>
       <button><CalculateIcon /></button>
       </form>
     </div>
