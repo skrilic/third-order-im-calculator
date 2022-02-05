@@ -3,26 +3,25 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 function Station(props) {
     return (
-        <li>
+        <div>
             {
                 props.stationName.trim() !== "" ? 
                 <div>
-                    {props.stationName}  {props.stationFrequency}MHz <span onClick={() => {
+                    <div className="station-name-label">{props.stationName}</div>  {props.stationFrequency}MHz <span onClick={() => {
                         props.onDelete(props.id);
                     }}>
                         <DeleteIcon />
                     </span>
                 </div> :
                 <div>
-                    F<sub>{props.id}</sub>  {props.stationFrequency}MHz <span onClick={() => {
+                    <div className="station-name-label">F<sub>{props.id}</sub></div>  {props.stationFrequency}MHz <span onClick={() => {
                         props.onDelete(props.id);
                     }}>
                         <DeleteIcon />
                     </span>
                 </div>
-                
             }
-        </li>
+        </div>
     )
 }
 

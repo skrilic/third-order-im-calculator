@@ -31,3 +31,9 @@ form.station-row {
     cursor: pointer;
     outline: none;
   }
+
+  .station-name-label {
+    position: absolute;
+    align-items: flex-start;
+    color:dimgrey;
+  }
