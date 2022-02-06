@@ -1,2 +1,2 @@
-# Introduction
-The intention of the project is to simplify calculation of all possible third order intermodulation products collocated transmitters and hence make troubleshooting of faulty transmitter easier.
+# Description
+"third-order-im-calculato" (TOIC) is the calculator of all possible third order intermodulation products collocated transmitters.
