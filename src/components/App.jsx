@@ -28,6 +28,10 @@ function App() {
         return index !== stationId;
       })
     });
+    console.log("Station list length: " + stationList.length);
+    if (stationList.length <= 1) {
+      setRowData([])
+    };
   }
 
 
