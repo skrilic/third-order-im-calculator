@@ -20,7 +20,7 @@ function CreateStation(props) {
 	  }
 
 	function checkPositive(event) {
-		if (event.target.value <= 0) {
+		if (event.target.value < 0) {
 			event.target.value = "";
 		}
 	}
