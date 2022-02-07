@@ -13,6 +13,9 @@ function App() {
   const [stationList, setStationList] = useState([]);
 
   function addStation(newStation) {
+    if (newStation.frequency.toString().trim() === "") {
+      return;
+    }
     setStationList(prevStations => {
       return [...prevStations, newStation];
     });
@@ -32,58 +35,68 @@ function App() {
 		event.preventDefault();
 	}
 
+
+  function im2FxFy() {
+    /* 2*Fx-Fy; where x!=y */
+    stationList.forEach((station1) => {
+      stationList.forEach((station2) => {
+        if (station2 !== station1) {
+          var imFreq = 2*station1.frequency - station2.frequency;
+          if (imFreq > 0) {
+            im3Array.push({
+              description:`2*${station1.name}(${station1.frequency}) - ${station2.name}(${station2.frequency})`,
+              frequency:imFreq.toFixed(2)
+            });
+          }
+        }
+      })
+    })
+  }
+
+  function imFxFyFz() {
+    /* Fx+Fy-Fzwhere x!=y!=z */
+    var i = 0;
+    stationList.forEach(station1 => {
+      var j = 0;
+      stationList.forEach(station2 => {
+        if (j>i) {
+        stationList.forEach(station3 => {
+          if(station3 !== station2 && station3 !== station1) {
+            var imFreq = parseFloat(station1.frequency) + parseFloat(station2.frequency) - parseFloat(station3.frequency);
+            if (imFreq > 0) {
+              im3Array.push({
+              description:`${station1.name}(${station1.frequency}) + ${station2.name}(${station2.frequency}) - ${station3.name}(${station3.frequency})`,
+              frequency:imFreq.toFixed(2)
+            });
+          }
+          }
+        })
+      }
+        j++;
+      })
+      i++;
+    })
+  }
+
+
   function calculateIM3() {
     
     if (stationList.length <= 1) {
       alert("Please, add at least two stations on the list!");
     } else if(stationList.length === 2) {
       /* 2*Fx-Fy; where x!=y */
-      stationList.forEach((station1) => {
-        stationList.forEach((station2) => {
-          if (station2 !== station1) {
-            im3Array.push({
-              description:`2*${station1.name}(${station1.frequency}) - ${station2.name}(${station2.frequency})`,
-              frequency:(2*station1.frequency - station2.frequency).toFixed(2)
-            });
-          }
-        })
-      }) 
+      im2FxFy();
     } else {
       /* 2*Fx-Fy; where x!=y */
-      stationList.forEach((station1) => {
-        stationList.forEach((station2) => {
-          if (station2 !== station1) {
-            im3Array.push({
-              description:`2*${station1.name}(${station1.frequency}) - ${station2.name}(${station2.frequency})`,
-              frequency:(2*station1.frequency - station2.frequency).toFixed(2)
-            });
-          }
-        })
-      })
+      im2FxFy();
       /* Fx+Fy-Fzwhere x!=y!=z */
-      var i = 0;
-      stationList.forEach(station1 => {
-        var j = 0;
-        stationList.forEach(station2 => {
-          if (j>i) {
-          stationList.forEach(station3 => {
-            if(station3 !== station2 && station3 !== station1) {
-              im3Array.push({
-                description:`${station1.name}(${station1.frequency}) + ${station2.name}(${station2.frequency}) - ${station3.name}(${station3.frequency})`,
-                frequency:(parseFloat(station1.frequency) + parseFloat(station2.frequency) - parseFloat(station3.frequency)).toFixed(2)
-              });
-            }
-          })
-        }
-          j++;
-        })
-        i++;
-      })
+      imFxFyFz();
     }
-    // console.log(im3Array);
     setRowData(im3Array); 
   }
 
+  const freqComparator = (valueA, valueB, nodeA, nodeB, isInverted) => valueA - valueB;
+  
   return (
     <div className="App">
       <CreateStation onAdd={addStation}/>
@@ -107,11 +120,26 @@ function App() {
       <button onClick={calculateIM3}><CalculateIcon /></button>
       </form>
 
-      <div className="ag-theme-alpine App-im-list" style={{height: 400, width: 400}}>
+      <div className="ag-theme-alpine App-im-list" style={{height: 400, width: 480}}>
            <AgGridReact
                rowData={rowData}>
-               <AgGridColumn field="description" filter={ true }></AgGridColumn>
-               <AgGridColumn field="frequency" sortable={ true }></AgGridColumn>
+               <AgGridColumn 
+                field="description"
+                resizable={ true } 
+                sortable={ true } 
+                filter={ true }
+               >
+               </AgGridColumn>
+               
+               <AgGridColumn 
+                field="frequency" 
+                headerName="MHz" 
+                type="numericColumn" 
+                comparator={freqComparator}
+                sortable={ true } 
+                filter={ true }
+               >
+               </AgGridColumn>
            </AgGridReact>
        </div>
     </div>
