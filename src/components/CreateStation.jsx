@@ -19,6 +19,12 @@ function CreateStation(props) {
 		});
 	  }
 
+	function checkPositive(event) {
+		if (event.target.value <= 0) {
+			event.target.value = "";
+		}
+	}
+
 	function handleSubmit(event) {
 		event.preventDefault();
 	}
@@ -36,7 +42,9 @@ function CreateStation(props) {
 				<input 
 					name="frequency" 
 					type="number"
+					min="0"
 					step=".01"
+					onInput={checkPositive}
 					placeholder="Trasmitting frequency (MHz)"
 					onChange={handleChange}
 					value={station.frequency}
