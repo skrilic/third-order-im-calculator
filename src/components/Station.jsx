@@ -7,14 +7,14 @@ function Station(props) {
             {
                 props.stationName.trim() !== "" ? 
                 <div>
-                    <div className="station-name-label">{props.stationName}</div>  {props.stationFrequency}MHz <span onClick={() => {
+                    <div className="station-name-label">{props.stationName}</div>  {props.stationFrequency}<span onClick={() => {
                         props.onDelete(props.id);
                     }}>
                         <DeleteIcon />
                     </span>
                 </div> :
                 <div>
-                    <div className="station-name-label">F<sub>{props.id}</sub></div>  {props.stationFrequency}MHz <span onClick={() => {
+                    <div className="station-name-label">F<sub>{props.id}</sub></div>  {props.stationFrequency}<span onClick={() => {
                         props.onDelete(props.id);
                     }}>
                         <DeleteIcon />

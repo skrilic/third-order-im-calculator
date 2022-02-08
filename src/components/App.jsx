@@ -137,7 +137,7 @@ function App() {
                
                <AgGridColumn 
                 field="frequency" 
-                headerName="MHz" 
+                // headerName="Freq" 
                 type="numericColumn" 
                 comparator={freqComparator}
                 sortable={ true } 
