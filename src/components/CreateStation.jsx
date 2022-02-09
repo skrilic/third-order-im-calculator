@@ -45,7 +45,7 @@ function CreateStation(props) {
 					min="0"
 					step=".01"
 					onInput={checkPositive}
-					placeholder="Trasmitting frequency (MHz)"
+					placeholder="Trasmitting frequency"
 					onChange={handleChange}
 					value={station.frequency}
 				/>

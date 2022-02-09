@@ -1,2 +1,3 @@
 # third-order-im-calculator
-  "third-order-im-calculator" (TOIC) is the calculator of all possible third order intermodulation products collocated transmitters.
+  "third-order-im-calculator" (TOIC) is the calculator of third order intermodulation products for collocated transmitters.
+It calculates all possible frequencies combinations by formulas $2*f_{x}-f_{y}$ and $f_{x}+f_{y}-f_{z}$, over the set of frequencies $F = \{ f_{0}, f_{1}, f_{2}, ..., f_{n-1}\}$ where $x,y,z \in [0, 1, ..., N]$ and $x \ne y \ne z$, excluding negative results.

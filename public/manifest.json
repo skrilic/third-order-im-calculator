@@ -1,0 +1,15 @@
+{
+    "name": "TOIC",
+    "description": "3rd order intermodulation products calculator",
+    "version": "1.0",
+    "manifest_version": 2,
+    "browser_action": {
+      "default_popup": "index.html",
+      "default_title": "Open the calculator"
+    },
+    "icons": {
+      "16": "images/3rdim_16.png",
+      "48": "images/3rdim_48.png",
+      "128": "images/3rdim_128.png"
+    }
+}
