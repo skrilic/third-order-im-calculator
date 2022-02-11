@@ -5,7 +5,7 @@
 .App-stations-list {
   position: relative;
   width: 480px;
-  margin: 30px auto 20px auto;
+  margin: 20px 30px 30px 20px;
   background: #fff;
   padding: 15px;
   border-radius: 7px;
@@ -58,7 +58,7 @@
 .App-im-list {
   position: relative;
   /* width: 480px; */
-  margin: 30px auto 20px auto;
+  margin: 20px 30px 30px 20px;
   background: #fff;
   padding: 15px;
   border-radius: 7px;

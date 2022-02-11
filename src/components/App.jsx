@@ -7,6 +7,8 @@ import {AgGridColumn, AgGridReact} from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 
+const agGridStyle = {height: 290, width: 480};
+
 function App() {
   const im3Array = [];
   const [rowData, setRowData] = useState([]);
@@ -124,7 +126,7 @@ function App() {
       <button onClick={calculateIM3}><CalculateIcon /></button>
       </form>
 
-      <div className="ag-theme-alpine App-im-list" style={{height: 400, width: 480}}>
+      <div className="ag-theme-alpine App-im-list" style={agGridStyle}>
            <AgGridReact
                rowData={rowData}>
                <AgGridColumn 
