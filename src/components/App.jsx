@@ -1,13 +1,16 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import CreateStation from "./CreateStation";
 import Station from "./Station";
 import CalculateIcon from '@mui/icons-material/Calculate';
-import {AgGridColumn, AgGridReact} from 'ag-grid-react';
+import ExportCSV from "./ExportCSV";
+
+import { AgGridColumn, AgGridReact } from 'ag-grid-react';
 
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 
 const agGridStyle = {height: 290, width: 480};
+
 
 function App() {
   const im3Array = [];
@@ -40,7 +43,6 @@ function App() {
   function handleSubmit(event) {
 		event.preventDefault();
 	}
-
 
   function im2FxFy() {
     /* 2*Fx-Fy; where x!=y */
@@ -126,7 +128,8 @@ function App() {
       <button onClick={calculateIM3}><CalculateIcon /></button>
       </form>
 
-      <div className="ag-theme-alpine App-im-list" style={agGridStyle}>
+
+      <div className="ag-theme-alpine App-im-list" style={agGridStyle}>       
            <AgGridReact
                rowData={rowData}>
                <AgGridColumn 
@@ -147,6 +150,7 @@ function App() {
                >
                </AgGridColumn>
            </AgGridReact>
+           {(rowData.length >= 1) ? <ExportCSV jsonData={rowData} /> : null}
        </div>
     </div>
   );
