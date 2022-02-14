@@ -8,10 +8,10 @@ function ExportCSV(props) {
             type={Type.Button}
             filename={'intermodulations'}
             bom={true}
-        config={{
-            delimiter: ';',
-        }}
-        data = {props.jsonData}
+            config={{
+                delimiter: ';',
+            }}
+            data = {props.jsonData}
         >
             <FileDownloadIcon />
         </CSVDownloader>
