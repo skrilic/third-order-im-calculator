@@ -12,7 +12,7 @@ import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 const agGridStyle = {height: 290, width: 480};
 
 
-function App() {
+function Calculation() {
   const im3Array = [];
   const [rowData, setRowData] = useState([]);
   const [stationList, setStationList] = useState([]);
@@ -62,7 +62,7 @@ function App() {
   }
 
   function imFxFyFz() {
-    /* Fx+Fy-Fzwhere x!=y!=z */
+    /* Fx+Fy-Fz where x!=y!=z */
     var i = 0;
     stationList.forEach(station1 => {
       var j = 0;
@@ -97,7 +97,7 @@ function App() {
     } else {
       /* 2*Fx-Fy; where x!=y */
       im2FxFy();
-      /* Fx+Fy-Fzwhere x!=y!=z */
+      /* Fx+Fy-Fz where x!=y!=z */
       imFxFyFz();
     }
     setRowData(im3Array); 
@@ -156,4 +156,4 @@ function App() {
   );
 }
 
-export default App;
+export default Calculation;
