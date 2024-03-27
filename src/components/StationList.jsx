@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
 import Station from './Station';
-import CalculateIcon from "@mui/icons-material/Calculate";
 import Im3Calculator from './Im3Calculator';
 
 function StationList(props) {
     const stationList = props.stationList;
     const setStationList = props.setStationList;
-
-    const [rowData, setRowData] = useState([]);
+    const rowData = props.rowData;
+    const setRowData = props.setRowData;
 
     function deleteStation(stationId) {
 
@@ -16,17 +14,16 @@ function StationList(props) {
                 return index !== stationId;
             })
         });
-        // console.log("Station list length: " + stationList.length);
+
         if (stationList.length <= 1) {
             setRowData([])
         };
     }
 
     Im3Calculator(stationList, rowData, setRowData);
-
+    // console.log("ROW DATA (station list): ", rowData);
     return (
         <div>
-            <label>StationList</label>
 
             <form className="App-stations-list" onSubmit={(event) => event.preventDefault()}>
                 <ul>
@@ -45,8 +42,6 @@ function StationList(props) {
                         )
                     })}
                 </ul>
-                {/* <button onClick={calculateIM3}><CalculateIcon /></button> */}
-                <button onClick={() => console.log("calculateIM3")}><CalculateIcon /></button>
             </form>
 
         </div>

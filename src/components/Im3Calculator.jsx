@@ -2,10 +2,13 @@ import { useEffect } from "react";
 
 function Im3Calculator(stationList, rowData, setRowData) {
 
+    // const tmpIm3Array = useMemo(() => [], []);
     const tmpIm3Array = [];
 
-    console.log("ROW DATA: ", rowData);
-    function im2FxFy() {
+
+    // console.log("ROW DATA: ", rowData);
+
+    const im2FxFy = () => {
         /* 2*Fx-Fy; where x!=y */
         stationList.forEach((station1) => {
             stationList.forEach((station2) => {
@@ -22,7 +25,7 @@ function Im3Calculator(stationList, rowData, setRowData) {
         })
     }
 
-    function imFxFyFz() {
+    const imFxFyFz = () => {
         /* Fx+Fy-Fz where x!=y!=z */
         var i = 0;
         stationList.forEach(station1 => {
@@ -48,7 +51,7 @@ function Im3Calculator(stationList, rowData, setRowData) {
     }
 
     useEffect(() => {
-        console.log("Im3Calculator: ", rowData);
+        // console.log("Im3Calculator: ", rowData);
         if (stationList.length === 2) {
             /* 2*Fx-Fy; where x!=y */
             im2FxFy();
@@ -60,7 +63,7 @@ function Im3Calculator(stationList, rowData, setRowData) {
         }
         setRowData(tmpIm3Array);
 
-    })
+    }, [stationList])
 
 }
 
