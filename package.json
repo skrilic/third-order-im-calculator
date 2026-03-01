@@ -46,6 +46,7 @@
     "react-scripts": "^5.0.1"
   },
   "overrides": {
+    "serialize-javascript": "7.0.3",
     "jsonpath": "1.2.1"
   }
 }
