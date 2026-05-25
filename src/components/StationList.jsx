@@ -1,11 +1,13 @@
 import Station from './Station';
-import Im3Calculator from './Im3Calculator';
+import useIm3Calculator from './Im3Calculator';
 
 function StationList(props) {
     const stationList = props.stationList;
     const setStationList = props.setStationList;
     const rowData = props.rowData;
     const setRowData = props.setRowData;
+
+    useIm3Calculator(stationList, setRowData);
 
     function deleteStation(stationId) {
 
@@ -20,7 +22,6 @@ function StationList(props) {
         };
     }
 
-    Im3Calculator(stationList, rowData, setRowData);
     // console.log("ROW DATA (station list): ", rowData);
     return (
         <div>
