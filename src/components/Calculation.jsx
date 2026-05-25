@@ -4,9 +4,7 @@ import AddStation from "./AddStation";
 import StationList from "./StationList";
 
 import { AgGridReact } from 'ag-grid-react';
-
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { themeAlpine } from 'ag-grid-community';
 
 const agGridStyle = { height: 290, width: 510 };
 
@@ -16,24 +14,24 @@ function Calculation() {
   const [rowData, setRowData] = useState([]);
   const [stationList, setStationList] = useState([]);
 
-  const columnDefs = [
+  const columnDefs = useMemo(() => [
     {
       headerName: 'Description',
       field: 'description',
-      valueFormatter: params => String(params.data.description),
+      valueFormatter: params => params.value ? String(params.value) : '',
       autoHeaderHeight: true,
-      width: '350%',
+      width: 350,
       cellStyle: { textAlign: "left" }
     },
     {
       headerName: 'Frequency',
       field: 'frequency',
-      valueFormatter: params => parseFloat(params.data.frequency).toFixed(2),
+      valueFormatter: params => params.value ? parseFloat(params.value).toFixed(2) : '',
       autoHeaderHeight: true,
-      width: '150%',
+      width: 150,
       comparator: (valueA, valueB, nodeA, nodeB, isInverted) => valueA - valueB
     }
-  ];
+  ], []);
 
   const defaultColDef = useMemo(() => {
     return {
@@ -53,11 +51,12 @@ function Calculation() {
         setRowData={setRowData}
       />
 
-      <div className="ag-theme-alpine App-im-list" style={agGridStyle}>
+      <div className="App-im-list" style={agGridStyle}>
         <AgGridReact
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
-          rowData={rowData}>
+          rowData={rowData}
+          theme={themeAlpine}>
         </AgGridReact>
         {(rowData.length >= 1) ? <ExportCSV jsonData={rowData} /> : null}
       </div>
