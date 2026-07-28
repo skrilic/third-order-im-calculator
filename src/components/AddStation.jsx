@@ -9,6 +9,7 @@ import {
 } from "@ionic/react";
 import { addOutline } from "ionicons/icons";
 import { normalizeStation } from "../domain/normalizeStation";
+import { useI18n } from "../i18n/I18nProvider";
 
 const emptyStation = {
   name: "",
@@ -16,6 +17,7 @@ const emptyStation = {
 };
 
 function AddStation({ onAddStation }) {
+  const { t } = useI18n();
   const [station, setStation] = useState(emptyStation);
   const [error, setError] = useState("");
 
@@ -24,7 +26,7 @@ function AddStation({ onAddStation }) {
 
     const normalized = normalizeStation(station);
     if (normalized.error) {
-      setError(normalized.error);
+      setError(t(normalized.error));
       return;
     }
 
@@ -46,30 +48,33 @@ function AddStation({ onAddStation }) {
       <IonCardContent>
         <form className="station-form" onSubmit={handleSubmit}>
           <IonInput
-            label="Station name"
+            label={t("station.name")}
             labelPlacement="stacked"
-            placeholder="Optional"
+            placeholder={t("station.optional")}
             value={station.name}
             onIonInput={(event) =>
               updateStation("name", event.detail.value)
             }
           />
           <IonInput
-            label="Transmitting frequency"
+            label={t("station.frequency")}
             labelPlacement="stacked"
             type="number"
             min="0"
             step="0.01"
             inputMode="decimal"
-            placeholder="For example, 100.50"
+            placeholder={t("station.frequencyExample")}
             value={station.frequency}
             onIonInput={(event) =>
               updateStation("frequency", event.detail.value)
             }
           />
-          <IonButton type="submit" aria-label="Add station">
+          <IonButton
+            type="submit"
+            aria-label={t("station.addAria")}
+          >
             <IonIcon slot="start" icon={addOutline} />
-            Add
+            {t("common.add")}
           </IonButton>
           {error ? (
             <IonText color="danger" className="station-form__error">

@@ -7,17 +7,26 @@ import {
 } from "@ionic/react";
 import Station from "./Station";
 import { stationLabel } from "../domain/calculateIm3";
+import { useI18n } from "../i18n/I18nProvider";
 
-function StationList({ stationList, onDeleteStation }) {
+function StationList({
+  stationList,
+  onDeleteStation,
+  title
+}) {
+  const { t } = useI18n();
+  const resolvedTitle = title ?? t("manual.stations");
   return (
     <IonCard className="calculator-card">
       <IonCardHeader>
-        <IonCardTitle>Stations ({stationList.length})</IonCardTitle>
+        <IonCardTitle>
+          {resolvedTitle} ({stationList.length})
+        </IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         {stationList.length === 0 ? (
           <p className="station-list-empty">
-            No stations have been added yet.
+            {t("station.empty")}
           </p>
         ) : (
           <IonList lines="full">

@@ -1,5 +1,4 @@
-const frequencyError =
-  "Enter a valid non-negative transmitting frequency.";
+const frequencyError = "errors.frequencyInvalid";
 
 export function normalizeStation(input) {
   const rawFrequency = String(input.frequency ?? "").trim();

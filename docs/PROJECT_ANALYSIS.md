@@ -2,9 +2,10 @@
 
 ## Scope and status
 
-TOIC is a client-side Ionic React application built with Vite. It accepts
-transmitter names and frequencies, calculates supported third-order
-intermodulation products, renders them in AG Grid, and exports a CSV file.
+TOIC is a client-side Ionic React application built with Vite. It maintains a
+local IndexedDB catalog of map locations and transmitters, loads a selected
+location into the calculator, calculates supported third-order intermodulation
+products, renders them in AG Grid, and exports CSV results or JSON backups.
 
 The production output serves three targets:
 
@@ -23,26 +24,62 @@ index.html
         ├── setupIonicReact()
         ├── register minimal AG Grid modules
         └── App
-            └── Calculation
-                ├── AddStation
-                ├── StationList
-                │   └── Station
-                ├── normalizeStation(input)
-                ├── calculateIm3(stations)
-                ├── AgGridReact
-                └── ExportCSV
-                    └── createCsv(rows)
+            ├── I18nProvider
+            ├── hashRouter
+            ├── AppHeader
+            │   └── ThemeButton
+            ├── AppTabBar
+            ├── HomePage
+            │   └── LocationManager
+            │       ├── LocationMap (React Leaflet)
+            │       ├── Geolocation adapter
+            │       ├── LocationFormModal
+            │       ├── LocationDetailsModal
+            │       └── IndexedDB adapter
+            ├── Calculation (manual route)
+            │   ├── AddStation
+            │   ├── StationList
+            │   └── ResultsGrid
+            ├── LocationResultsPage
+            │   ├── IndexedDB snapshot
+            │   ├── StationList
+            │   └── ResultsGrid
+            │       ├── calculateIm3(stations)
+            │       ├── AgGridReact
+            │       └── ExportCSV
+            └── SettingsPage
+                ├── BackupManager
+                └── Language selector
 ```
 
-`Calculation` owns only the source station list. Results are derived with
-`useMemo` from the pure `calculateIm3` function, avoiding duplicated mutable
-state and calculation effects.
+`App` owns the unsaved manual station list so it survives tab changes.
+`Calculation` edits that list, while a saved location result page reads its
+location and transmitter set from IndexedDB. Both routes derive results with
+the pure `calculateIm3` function and render the shared `ResultsGrid`.
 
 ```js
 station = {
   id: string,
   name: string,
   frequency: number
+}
+
+location = {
+  id: string,
+  name: string,
+  latitude: number,
+  longitude: number,
+  createdAt: string,
+  updatedAt: string
+}
+
+transmitter = {
+  id: string,
+  locationId: string,
+  name: string,
+  frequency: number,
+  createdAt: string,
+  updatedAt: string
 }
 
 result = {
@@ -60,7 +97,22 @@ distinctness is based on array indices rather than JavaScript object identity.
 | --- | --- |
 | `src/main.jsx` | Initializes Ionic, registers required AG Grid modules, and renders React. |
 | `src/App.jsx` | Provides the `IonApp` root. |
-| `src/components/Calculation.jsx` | Owns stations and composes the Ionic page, derived results, and grid. |
+| `src/components/Calculation.jsx` | Edits the app-owned manual station list and composes the calculation route. |
+| `src/components/AppHeader.jsx` | Renders the compact Ionic toolbar and upper-right theme action. |
+| `src/components/AppTabBar.jsx` | Renders icon-based Home/Calculate/Settings mobile navigation. |
+| `src/components/ThemeButton.jsx` | Selects and persists system/light/dark appearance. |
+| `src/components/ResultsGrid.jsx` | Shares AG Grid and CSV output across both calculation routes. |
+| `src/pages/HomePage.jsx` | Hosts map-based location/transmitter management. |
+| `src/pages/LocationResultsPage.jsx` | Loads one saved location and calculates all associated transmitters. |
+| `src/pages/SettingsPage.jsx` | Hosts JSON backup/import and language selection. |
+| `src/routing/hashRouter.js` | Implements extension-safe hash navigation and strict result-route matching. |
+| `src/i18n/I18nProvider.jsx` | Provides English-default translation lookup and persisted language changes. |
+| `src/i18n/translations.js` | Contains matching English and Croatian UI catalogs. |
+| `src/components/LocationManager.jsx` | Coordinates persisted data, selection, map dialogs, and backups. |
+| `src/components/LocationMap.jsx` | Renders OpenStreetMap tiles and non-bubbling location markers. |
+| `src/data/geolocation.js` | Normalizes explicit web, extension, Android, and iOS location requests. |
+| `src/components/LocationDetailsModal.jsx` | Lists location transmitters and provides location/transmitter CRUD. |
+| `src/components/BackupManager.jsx` | Previews, exports, merges, and replaces versioned JSON backups. |
 | `src/components/AddStation.jsx` | Collects station input and delegates normalization to the domain layer. |
 | `src/components/StationList.jsx` | Renders the current Ionic station list. |
 | `src/components/Station.jsx` | Renders one station with an accessible delete button. |
@@ -68,7 +120,11 @@ distinctness is based on array indices rather than JavaScript object identity.
 | `src/domain/calculateIm3.js` | Contains pure formula, labeling, filtering, and rounding logic. |
 | `src/domain/normalizeStation.js` | Validates and normalizes station form values. |
 | `src/domain/createCsv.js` | Escapes and serializes result rows as spreadsheet-compatible CSV. |
-| `src/domain/*.test.js` | Contains 22 unit tests for the three domain modules. |
+| `src/domain/records.js` | Validates and normalizes persisted location/transmitter records. |
+| `src/domain/backup.js` | Defines backup schema validation, parsing, conflict analysis, and merge rules. |
+| `src/data/database.js` | Implements IndexedDB CRUD, cascade deletion, snapshots, and atomic writes. |
+| `src/theme/themePreference.js` | Resolves, stores, and applies Ionic and AG Grid theme modes. |
+| `src/**/*.test.js` | Contains 80 unit, route, theme, i18n, geolocation, and IndexedDB adapter tests across ten modules. |
 
 ## Calculation behavior
 
@@ -96,14 +152,20 @@ The domain function:
 
 ## State and data flow
 
-1. `AddStation` converts a valid input frequency to a number.
-2. `Calculation` appends a fresh station with a stable ID.
-3. `calculateIm3` derives a new result array.
-4. AG Grid receives the result rows for sorting and filtering.
-5. `ExportCSV` receives the same full result array.
-6. Deletion filters by station ID and automatically derives new results.
+1. `HomePage` provides location/transmitter CRUD without owning calculation
+   state.
+2. **Calculate** on a marker navigates to
+   `#/locations/:id/results`.
+3. `LocationResultsPage` reads IndexedDB and filters transmitters by
+   `locationId`.
+4. The `#/calculate` route builds a separate in-memory station set.
+5. `calculateIm3` derives a new result array for either calculation page.
+6. AG Grid receives the result rows for sorting and filtering.
+7. `ExportCSV` receives the same full result array.
 
-No data leaves React memory. Refreshing the application clears all stations.
+Saved catalog data remains local to the current origin. Manual entries remain
+in React memory and clear on refresh. JSON backup is the explicit portability
+and recovery mechanism.
 
 ## Build and distribution architecture
 
@@ -130,11 +192,13 @@ The direct dependency set is now:
 | Area | Implementation |
 | --- | --- |
 | UI runtime | React 19 and Ionic React 8 |
-| Data grid | AG Grid Community 35 |
+| Data grid | AG Grid Community 36 |
+| Map | Leaflet 1.9 and React Leaflet 5 |
 | Icons | Ionicons 8 |
 | Build | Vite 8 and React plugin |
 | Tests | Vitest 4 |
 | Native wrapper | Capacitor Core/CLI 8 |
+| Device position | Capacitor Geolocation 8.2 |
 | Config loader | TypeScript 5.9 |
 
 As of 28 July 2026:
@@ -153,7 +217,7 @@ security. It should remain part of CI and release verification.
 
 | Check | Result |
 | --- | --- |
-| `npm test` | Twenty-two domain unit tests pass. |
+| `npm test` | Eighty domain, route, theme, i18n, geolocation, and IndexedDB adapter tests pass. |
 | `npm run build` | Vite production build succeeds. |
 | `npm audit` | Zero known vulnerabilities. |
 | `npx cap config` | TypeScript configuration loads successfully. |
@@ -165,18 +229,23 @@ security. It should remain part of CI and release verification.
 - Domain calculations are isolated from React lifecycle code.
 - The dependency graph is much smaller and contains no global overrides.
 - Ionic components improve mobile layout and control semantics.
+- The toolbar, bottom tab bar, theme action, and safe-area-aware Ionic shell
+  follow a native-mobile navigation pattern.
 - The same output contract is preserved for extensions and Capacitor.
 - CSV export no longer requires a separate parser dependency.
-- Tests cover numerical rules, input normalization, and CSV serialization.
+- IndexedDB writes preserve referential integrity and use atomic transactions.
+- Versioned JSON backups provide explicit local-data portability and recovery.
+- Tests cover numerical rules, persistence, backup validation, and merge rules.
 
 ## Remaining priorities
 
 ### High priority
 
-1. Add component tests for form feedback, deletion, and the download side effect.
+1. Add component tests for map event propagation, modal feedback, deletion,
+   and the download side effect.
 2. Perform manual and automated smoke tests of the Manifest V3 popup.
 3. Add CI steps for install, audit, test, build, and Capacitor config validation.
-4. Decide whether station state should persist locally.
+4. Add migrations when a second persisted schema version is introduced.
 
 ### Medium priority
 

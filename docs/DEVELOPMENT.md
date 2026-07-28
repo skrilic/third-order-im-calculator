@@ -47,8 +47,14 @@ Vite writes production output to `build/`, which is ignored by Git.
 ├── public/                       Extension manifests, icons, and static files
 ├── src/
 │   ├── components/               Ionic form/list/export and AG Grid view
-│   ├── domain/                   Pure IM3 calculation and unit tests
-│   ├── theme/                    Ionic variables and responsive styles
+│   ├── data/                     IndexedDB CRUD, cascade delete, and import
+│   │                              plus Capacitor geolocation adapter
+│   ├── domain/                   Pure calculation, validation, merge, and tests
+│   ├── i18n/                     English/Croatian catalogs, provider, storage
+│   ├── pages/                    Home/map and saved-location result pages
+│   ├── routing/                  Dependency-free hash router and route tests
+│   ├── theme/                    Palettes, preference logic, styles, and tests
+│   ├── utils/                    Browser download adapter
 │   ├── App.jsx                   Ionic application root
 │   └── main.jsx                  Ionic and AG Grid initialization
 ├── package.json                  Direct runtime/development dependencies
@@ -81,13 +87,27 @@ proposed compatible changes have been reviewed.
 
 ## Testing
 
-The current Vitest suite contains 22 unit tests across three domain modules:
+The current Vitest suite contains 80 tests across ten modules:
 
 - IM3 formulas, candidate counts, positivity filtering, fallback labels,
   rounding, duplicate operands, and input immutability;
 - station-name trimming, numeric conversion, zero, and invalid frequencies;
 - CSV headers, UTF-8 BOM, semicolon delimiters, CRLF lines, quotes, nullish
-  values, and embedded delimiters/newlines.
+  values, and embedded delimiters/newlines;
+- location and transmitter normalization, coordinate limits, required
+  relationships, and stable metadata;
+- backup envelopes, schema validation, referential integrity, conflict
+  analysis, JSON parsing, and deterministic merge behavior;
+- IndexedDB create/update/delete, cascade deletion, missing-location
+  protection, merge, atomic replacement, and rejection without data loss;
+- saved-location result route matching, URL decoding, and malformed route
+  rejection;
+- theme normalization, system resolution, persistent storage, Ionic dark-class
+  application, browser color scheme, and AG Grid theme mode;
+- language normalization, English fallback, local persistence, interpolation,
+  translation-catalog parity, and localized CSV headers;
+- web/extension/native geolocation permission flow, position normalization,
+  invalid coordinates, error-code mapping, and plugin options.
 
 Run it with:
 
@@ -95,8 +115,86 @@ Run it with:
 npm test
 ```
 
-Recommended next tests are Ionic component interactions, the browser download
-side effect, and an end-to-end extension popup smoke test.
+`fake-indexeddb` is a development-only dependency used to exercise the actual
+database adapter without a browser. Recommended next tests are Ionic component
+interactions, the browser download side effect, map event propagation, and an
+end-to-end extension popup smoke test.
+
+## Application routes
+
+TOIC uses a small local hash router instead of a routing dependency:
+
+| Route | Purpose |
+| --- | --- |
+| `#/` | OpenStreetMap location and transmitter CRUD. |
+| `#/calculate` | Unsaved manual station entry and calculation. |
+| `#/settings` | JSON data backup and application-language selection. |
+| `#/locations/:id/results` | Read a saved location and render its IM3 products. |
+
+Hash paths do not require server fallback rules, work in the Manifest V3 popup,
+and preserve browser back/forward behavior. Route parameters are encoded before
+navigation and decoded only after a strict path match.
+
+## Mobile shell and themes
+
+Every route renders the same mobile navigation pattern:
+
+- `AppHeader` uses `IonToolbar`, shows the compact `TOIC` name, and places the
+  appearance action in the upper-right corner;
+- `AppTabBar` uses `IonTabBar`/`IonTabButton` for icon-labeled **Home**,
+  **Calculate**, and **Settings** destinations;
+- manual stations are owned by `App`, so switching tabs does not clear an
+  unfinished calculation.
+
+The saved `toic-theme` preference is `system`, `light`, or `dark`. It is applied
+before the first React render, avoiding a light-theme flash. Dark mode uses the
+official Ionic class palette. The resolved theme is also written to
+`data-ag-theme-mode`, allowing AG Grid's variable colour scheme to switch
+without rebuilding the grid.
+
+## Localization
+
+`I18nProvider` exposes the active language, its setter, and the `t()` lookup
+function. Catalogs are flat key/value maps in `src/i18n/translations.js`.
+English is both the default and fallback language; Croatian supplies the same
+key set, enforced by a unit test.
+
+The `toic-language` localStorage entry stores `en` or `hr`. The HTML `lang`
+attribute is set before the first React render and updated when the selection
+changes. Localization covers Ionic navigation, forms, CRUD dialogs, validation
+errors, backup flow, AG Grid filter/sort text, empty states, accessibility
+labels, and CSV headers.
+
+The other persisted preference is `toic-theme`, whose accepted values are
+`system`, `light`, and `dark`.
+
+## Map configuration
+
+The default map uses the standard OpenStreetMap tile service. A deployment can
+select another compatible provider without changing source:
+
+```bash
+VITE_MAP_TILE_URL="https://example.com/{z}/{x}/{y}.png" \
+VITE_MAP_TILE_ATTRIBUTION="Map data attribution" \
+npm run build
+```
+
+Both values are compiled into the client bundle. Do not put a private,
+unrestricted provider secret in a `VITE_` variable. OpenStreetMap attribution
+must remain visible when OpenStreetMap data or tiles are used. The application
+does not prefetch tiles or implement offline tile downloading.
+
+## Geolocation
+
+`@capacitor/geolocation` is pinned to 8.2.0 and wrapped by
+`src/data/geolocation.js`. The UI invokes it only from the explicit location
+button. The adapter skips native permission methods on web, requests foreground
+permission on Android/iOS, and supports optional WebExtension permission.
+
+Native permission entries and the boundary for the future automatic mode are
+documented in [GEOLOCATION.md](GEOLOCATION.md). Because generated native
+platform projects are not yet committed, run the documented manifest/Info.plist
+step immediately after adding a platform and before `npx cap sync`.
 
 ## Browser extension build
 
@@ -152,6 +250,8 @@ Before publishing:
 3. run `npm test`;
 4. run `npm run build`;
 5. validate `npx cap config`;
-6. test adding, deleting, filtering, and CSV export in the browser;
+6. test the empty-map click, marker click, current-position button,
+   permission-denied path, location/transmitter CRUD, filtering, CSV export,
+   and both JSON import modes in the browser;
 7. load `build/` as an unpacked extension;
 8. verify intentional versions in `package.json` and both extension manifests.

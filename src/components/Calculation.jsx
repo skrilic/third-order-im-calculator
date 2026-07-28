@@ -1,22 +1,16 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonContent,
-  IonHeader,
-  IonPage,
-  IonTitle,
-  IonToolbar
+  IonPage
 } from "@ionic/react";
-import { AgGridReact } from "ag-grid-react";
-import { themeAlpine } from "ag-grid-community";
 
 import AddStation from "./AddStation";
-import ExportCSV from "./ExportCSV";
+import AppHeader from "./AppHeader";
+import AppTabBar from "./AppTabBar";
+import ResultsGrid from "./ResultsGrid";
 import StationList from "./StationList";
 import { calculateIm3 } from "../domain/calculateIm3";
+import { useI18n } from "../i18n/I18nProvider";
 
 function createStationId() {
   if (globalThis.crypto?.randomUUID) {
@@ -26,106 +20,49 @@ function createStationId() {
   return `station-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function Calculation() {
-  const [stationList, setStationList] = useState([]);
-
+function Calculation({ stationList, onStationListChange }) {
+  const { t } = useI18n();
   const rowData = useMemo(
     () => calculateIm3(stationList),
     [stationList]
   );
 
-  const columnDefs = useMemo(
-    () => [
-      {
-        headerName: "Description",
-        field: "description",
-        filter: "agTextColumnFilter",
-        flex: 1,
-        minWidth: 280,
-        cellStyle: { textAlign: "left" }
-      },
-      {
-        headerName: "Frequency",
-        field: "frequency",
-        filter: "agTextColumnFilter",
-        width: 150,
-        valueFormatter: ({ value }) =>
-          value === null || value === undefined || value === ""
-            ? ""
-            : Number(value).toFixed(2),
-        comparator: (valueA, valueB) => Number(valueA) - Number(valueB)
-      }
-    ],
-    []
-  );
-
-  const defaultColDef = useMemo(
-    () => ({
-      sortable: true,
-      resizable: true,
-      cellStyle: { color: "#4f5154" }
-    }),
-    []
-  );
-
   const addStation = useCallback((station) => {
-    setStationList((current) => [
+    onStationListChange((current) => [
       ...current,
       {
         ...station,
         id: createStationId()
       }
     ]);
-  }, []);
+  }, [onStationListChange]);
 
   const deleteStation = useCallback((stationId) => {
-    setStationList((current) =>
+    onStationListChange((current) =>
       current.filter((station) => station.id !== stationId)
     );
-  }, []);
+  }, [onStationListChange]);
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar color="primary">
-          <IonTitle>Third-order IM calculator</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+      <AppHeader />
       <IonContent className="calculator-content">
         <main className="calculator-shell">
+          <h1 className="page-heading">{t("manual.title")}</h1>
           <p className="calculator-intro">
-            Add collocated transmitters to calculate positive third-order
-            intermodulation products.
+            {t("manual.intro")}
           </p>
 
           <AddStation onAddStation={addStation} />
           <StationList
             stationList={stationList}
             onDeleteStation={deleteStation}
+            title={t("manual.stations")}
           />
-
-          <IonCard className="calculator-card">
-            <IonCardHeader>
-              <div className="results-heading">
-                <IonCardTitle>
-                  Products ({rowData.length})
-                </IonCardTitle>
-                <ExportCSV rows={rowData} />
-              </div>
-            </IonCardHeader>
-            <IonCardContent>
-              <div className="results-grid">
-                <AgGridReact
-                  columnDefs={columnDefs}
-                  defaultColDef={defaultColDef}
-                  rowData={rowData}
-                  theme={themeAlpine}
-                />
-              </div>
-            </IonCardContent>
-          </IonCard>
+          <ResultsGrid rows={rowData} />
         </main>
       </IonContent>
+      <AppTabBar activeTab="calculate" />
     </IonPage>
   );
 }

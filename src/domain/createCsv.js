@@ -2,9 +2,12 @@ function escapeCsvField(value) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
 }
 
-export function createCsv(rows) {
+export function createCsv(
+  rows,
+  headers = ["description", "frequency"]
+) {
   const lines = [
-    ["description", "frequency"],
+    headers,
     ...rows.map((row) => [row.description, row.frequency])
   ];
 

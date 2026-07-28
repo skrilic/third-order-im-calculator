@@ -54,4 +54,10 @@ describe("createCsv", () => {
       '"Station ""A""; first line\nsecond line";"100.00"'
     );
   });
+
+  it("accepts localized column headers", () => {
+    expect(createCsv([], ["Opis", "Frekvencija"])).toBe(
+      '\ufeff"Opis";"Frekvencija"'
+    );
+  });
 });

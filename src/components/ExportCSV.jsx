@@ -1,21 +1,21 @@
 import { IonButton, IonIcon } from "@ionic/react";
 import { downloadOutline } from "ionicons/icons";
 import { createCsv } from "../domain/createCsv";
+import { downloadBlob } from "../utils/download";
+import { useI18n } from "../i18n/I18nProvider";
 
 function ExportCSV({ rows }) {
+  const { t } = useI18n();
   function downloadCsv() {
-    const blob = new Blob([createCsv(rows)], {
+    const blob = new Blob([
+      createCsv(rows, [
+        t("results.description"),
+        t("results.frequency")
+      ])
+    ], {
       type: "text/csv;charset=utf-8"
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "intermodulations.csv";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    downloadBlob(blob, "intermodulations.csv");
   }
 
   return (
@@ -24,10 +24,10 @@ function ExportCSV({ rows }) {
       size="small"
       disabled={rows.length === 0}
       onClick={downloadCsv}
-      aria-label="Download intermodulation products as CSV"
+      aria-label={t("results.exportCsvAria")}
     >
       <IonIcon slot="start" icon={downloadOutline} />
-      Export CSV
+      {t("results.exportCsv")}
     </IonButton>
   );
 }

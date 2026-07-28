@@ -18,7 +18,24 @@ Only products greater than zero are displayed.
 ## Features
 
 - Responsive Ionic interface for web and mobile form factors.
-- Add and remove stations with validation and stable identifiers.
+- Mobile application shell with an Ionic top toolbar, bottom
+  Home/Calculate/Settings tab bar, safe-area-aware layout, and persistent
+  system/light/dark themes.
+- Dependency-free English/Croatian i18n infrastructure with English as the
+  default language and a locally persisted language choice.
+- Create, edit, and delete named map locations and their transmitters.
+- Open a saved location's result route to calculate with every associated
+  transmitter.
+- Add locations by clicking OpenStreetMap and manage existing data by clicking
+  its marker.
+- Center the map on the current device position through the official Capacitor
+  Geolocation plugin after an explicit user permission action.
+- Store locations and transmitters persistently in IndexedDB.
+- Export and import validated, versioned JSON backups with merge and atomic
+  replace modes.
+- Retain manual frequency entry for quick, unsaved calculations.
+- Navigate between the map, manual calculator, and location results through
+  extension-safe hash routes.
 - Calculate supported IM3 products through a tested pure domain function.
 - Sort and filter results with AG Grid.
 - Export results as a semicolon-delimited UTF-8 CSV file.
@@ -37,6 +54,13 @@ npm run dev
 ```
 
 Vite serves the development application at `http://localhost:5173`.
+
+Application routes:
+
+- `#/` — location map and CRUD;
+- `#/calculate` — manual calculator;
+- `#/settings` — data backup and application language;
+- `#/locations/:id/results` — calculated results for a saved location.
 
 ## Verification
 
@@ -68,13 +92,18 @@ not yet included; add the selected platform before running sync/open commands.
 ## Documentation
 
 - [User guide](docs/index.md)
+- [Location database and backup guide](docs/DATA_MANAGEMENT.md)
+- [Geolocation integration and native permissions](docs/GEOLOCATION.md)
 - [Development and distribution guide](docs/DEVELOPMENT.md)
 - [Architecture and project analysis](docs/PROJECT_ANALYSIS.md)
 - [Vite and Ionic migration record](docs/MIGRATION_VITE_IONIC.md)
 
 ## Current limitations
 
-- Stations are held only in memory and disappear on refresh.
+- Manual calculation entries are held only in memory and disappear on refresh;
+  saved locations and transmitters persist in IndexedDB.
+- IndexedDB is local to each browser profile, extension origin, or native
+  WebView. Use JSON export to move or preserve data.
 - Frequency units are not enforced.
 - Equal output frequencies are retained as separate formula products.
 - Native Android and iOS platform projects are not part of the repository.
