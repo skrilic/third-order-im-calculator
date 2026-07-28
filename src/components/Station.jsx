@@ -1,28 +1,30 @@
-import React from "react";
-import DeleteIcon from '@mui/icons-material/Delete';
+import {
+  IonButton,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonNote
+} from "@ionic/react";
+import { trashOutline } from "ionicons/icons";
 
-function Station(props) {
-    return (
-        <div>
-            {
-                props.stationName.trim() !== "" ? 
-                <div>
-                    <div className="station-name-label">{props.stationName}</div>  {props.stationFrequency}<span onClick={() => {
-                        props.onDelete(props.id);
-                    }}>
-                        <DeleteIcon />
-                    </span>
-                </div> :
-                <div>
-                    <div className="station-name-label">F<sub>{props.id}</sub></div>  {props.stationFrequency}<span onClick={() => {
-                        props.onDelete(props.id);
-                    }}>
-                        <DeleteIcon />
-                    </span>
-                </div>
-            }
-        </div>
-    )
+function Station({ station, label, onDelete }) {
+  return (
+    <IonItem>
+      <IonLabel>{label}</IonLabel>
+      <IonNote slot="end" className="station-frequency">
+        {station.frequency}
+      </IonNote>
+      <IonButton
+        slot="end"
+        fill="clear"
+        color="danger"
+        onClick={() => onDelete(station.id)}
+        aria-label={`Delete ${label}`}
+      >
+        <IonIcon slot="icon-only" icon={trashOutline} />
+      </IonButton>
+    </IonItem>
+  );
 }
 
 export default Station;

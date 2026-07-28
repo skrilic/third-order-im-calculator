@@ -1,66 +1,132 @@
-import React, { useState, useMemo } from "react";
-import ExportCSV from "./ExportCSV";
+import { useCallback, useMemo, useState } from "react";
+import {
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar
+} from "@ionic/react";
+import { AgGridReact } from "ag-grid-react";
+import { themeAlpine } from "ag-grid-community";
+
 import AddStation from "./AddStation";
+import ExportCSV from "./ExportCSV";
 import StationList from "./StationList";
+import { calculateIm3 } from "../domain/calculateIm3";
 
-import { AgGridReact } from 'ag-grid-react';
-import { themeAlpine } from 'ag-grid-community';
+function createStationId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
 
-const agGridStyle = { height: 290, width: 510 };
-
+  return `station-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 function Calculation() {
-
-  const [rowData, setRowData] = useState([]);
   const [stationList, setStationList] = useState([]);
 
-  const columnDefs = useMemo(() => [
-    {
-      headerName: 'Description',
-      field: 'description',
-      valueFormatter: params => params.value ? String(params.value) : '',
-      autoHeaderHeight: true,
-      width: 350,
-      cellStyle: { textAlign: "left" }
-    },
-    {
-      headerName: 'Frequency',
-      field: 'frequency',
-      valueFormatter: params => params.value ? parseFloat(params.value).toFixed(2) : '',
-      autoHeaderHeight: true,
-      width: 150,
-      comparator: (valueA, valueB, nodeA, nodeB, isInverted) => valueA - valueB
-    }
-  ], []);
+  const rowData = useMemo(
+    () => calculateIm3(stationList),
+    [stationList]
+  );
 
-  const defaultColDef = useMemo(() => {
-    return {
-      filter: true,
-      cellStyle: { color: '#4F5154' },
-    };
+  const columnDefs = useMemo(
+    () => [
+      {
+        headerName: "Description",
+        field: "description",
+        filter: "agTextColumnFilter",
+        flex: 1,
+        minWidth: 280,
+        cellStyle: { textAlign: "left" }
+      },
+      {
+        headerName: "Frequency",
+        field: "frequency",
+        filter: "agTextColumnFilter",
+        width: 150,
+        valueFormatter: ({ value }) =>
+          value === null || value === undefined || value === ""
+            ? ""
+            : Number(value).toFixed(2),
+        comparator: (valueA, valueB) => Number(valueA) - Number(valueB)
+      }
+    ],
+    []
+  );
+
+  const defaultColDef = useMemo(
+    () => ({
+      sortable: true,
+      resizable: true,
+      cellStyle: { color: "#4f5154" }
+    }),
+    []
+  );
+
+  const addStation = useCallback((station) => {
+    setStationList((current) => [
+      ...current,
+      {
+        ...station,
+        id: createStationId()
+      }
+    ]);
+  }, []);
+
+  const deleteStation = useCallback((stationId) => {
+    setStationList((current) =>
+      current.filter((station) => station.id !== stationId)
+    );
   }, []);
 
   return (
-    <div className="App">
-      <AddStation setStationList={setStationList} />
+    <IonPage>
+      <IonHeader>
+        <IonToolbar color="primary">
+          <IonTitle>Third-order IM calculator</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="calculator-content">
+        <main className="calculator-shell">
+          <p className="calculator-intro">
+            Add collocated transmitters to calculate positive third-order
+            intermodulation products.
+          </p>
 
-      <StationList
-        stationList={stationList}
-        setStationList={setStationList}
-        rowData={rowData}
-        setRowData={setRowData}
-      />
+          <AddStation onAddStation={addStation} />
+          <StationList
+            stationList={stationList}
+            onDeleteStation={deleteStation}
+          />
 
-      <div className="App-im-list" style={agGridStyle}>
-        <AgGridReact
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          rowData={rowData}
-          theme={themeAlpine}>
-        </AgGridReact>
-        {(rowData.length >= 1) ? <ExportCSV jsonData={rowData} /> : null}
-      </div>
-    </div>
+          <IonCard className="calculator-card">
+            <IonCardHeader>
+              <div className="results-heading">
+                <IonCardTitle>
+                  Products ({rowData.length})
+                </IonCardTitle>
+                <ExportCSV rows={rowData} />
+              </div>
+            </IonCardHeader>
+            <IonCardContent>
+              <div className="results-grid">
+                <AgGridReact
+                  columnDefs={columnDefs}
+                  defaultColDef={defaultColDef}
+                  rowData={rowData}
+                  theme={themeAlpine}
+                />
+              </div>
+            </IonCardContent>
+          </IonCard>
+        </main>
+      </IonContent>
+    </IonPage>
   );
 }
 

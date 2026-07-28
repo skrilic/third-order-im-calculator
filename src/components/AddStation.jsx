@@ -1,67 +1,91 @@
-import React, { useState } from 'react';
-import AddIcon from "@mui/icons-material/Add";
+import { useState } from "react";
+import {
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonIcon,
+  IonInput,
+  IonText
+} from "@ionic/react";
+import { addOutline } from "ionicons/icons";
 
-function AddStation(props) {
-    const setStationList = props.setStationList;
+const emptyStation = {
+  name: "",
+  frequency: ""
+};
 
-    const [station, setStation] = useState({
-        name: "",
-        frequency: ""
+function AddStation({ onAddStation }) {
+  const [station, setStation] = useState(emptyStation);
+  const [error, setError] = useState("");
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    const frequency = Number(station.frequency);
+    if (
+      String(station.frequency).trim() === "" ||
+      !Number.isFinite(frequency) ||
+      frequency < 0
+    ) {
+      setError("Enter a valid non-negative transmitting frequency.");
+      return;
+    }
+
+    onAddStation({
+      name: station.name.trim(),
+      frequency
     });
+    setStation(emptyStation);
+    setError("");
+  }
 
-    function addStation() {
-        if (station.frequency.toString().trim() === "") {
-            return;
-        }
+  function updateStation(field, value) {
+    setStation((current) => ({
+      ...current,
+      [field]: value ?? ""
+    }));
+    setError("");
+  }
 
-        setStationList(prevStations => {
-            return [...prevStations, station];
-        });
-    }
-
-    function handleChange(event) {
-        const { name, value } = event.target;
-
-        setStation((prevStation) => {
-            return {
-                ...prevStation,
-                [name]: value
-            };
-        });
-    }
-
-    function checkPositive(event) {
-        if (event.target.value < 0) {
-            event.target.value = "";
-        }
-    }
-
-    return (
-        <form className="station-row" onSubmit={(event) => event.preventDefault()}>
-            <span >
-                <input
-                    name="name"
-                    type="text"
-                    placeholder="Station name"
-                    onChange={handleChange}
-                    value={station.name}
-                />
-                <input
-                    name="frequency"
-                    type="number"
-                    min="0"
-                    step=".01"
-                    onInput={checkPositive}
-                    placeholder="Trasmitting frequency"
-                    onChange={handleChange}
-                    value={station.frequency}
-                />
-                <button onClick={() => addStation()}>
-                    <AddIcon />
-                </button>
-            </span>
+  return (
+    <IonCard className="calculator-card">
+      <IonCardContent>
+        <form className="station-form" onSubmit={handleSubmit}>
+          <IonInput
+            label="Station name"
+            labelPlacement="stacked"
+            placeholder="Optional"
+            value={station.name}
+            onIonInput={(event) =>
+              updateStation("name", event.detail.value)
+            }
+          />
+          <IonInput
+            label="Transmitting frequency"
+            labelPlacement="stacked"
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder="For example, 100.50"
+            value={station.frequency}
+            onIonInput={(event) =>
+              updateStation("frequency", event.detail.value)
+            }
+          />
+          <IonButton type="submit" aria-label="Add station">
+            <IonIcon slot="start" icon={addOutline} />
+            Add
+          </IonButton>
+          {error ? (
+            <IonText color="danger" className="station-form__error">
+              <p>{error}</p>
+            </IonText>
+          ) : null}
         </form>
-    )
+      </IonCardContent>
+    </IonCard>
+  );
 }
 
-export default AddStation
+export default AddStation;

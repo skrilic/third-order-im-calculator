@@ -1,52 +1,39 @@
-import Station from './Station';
-import useIm3Calculator from './Im3Calculator';
+import {
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonList
+} from "@ionic/react";
+import Station from "./Station";
+import { stationLabel } from "../domain/calculateIm3";
 
-function StationList(props) {
-    const stationList = props.stationList;
-    const setStationList = props.setStationList;
-    const rowData = props.rowData;
-    const setRowData = props.setRowData;
-
-    useIm3Calculator(stationList, setRowData);
-
-    function deleteStation(stationId) {
-
-        setStationList(prevStations => {
-            return prevStations.filter((station, index) => {
-                return index !== stationId;
-            })
-        });
-
-        if (stationList.length <= 1) {
-            setRowData([])
-        };
-    }
-
-    // console.log("ROW DATA (station list): ", rowData);
-    return (
-        <div>
-
-            <form className="App-stations-list" onSubmit={(event) => event.preventDefault()}>
-                <ul>
-                    {stationList.map((station, index) => {
-                        return (
-                            (station.frequency.toString().trim() !== "") ?
-                                <li key={index}>
-                                    <Station
-                                        // key={index}
-                                        id={index}
-                                        stationName={station.name}
-                                        stationFrequency={station.frequency}
-                                        onDelete={deleteStation}
-                                    />
-                                </li> : null
-                        )
-                    })}
-                </ul>
-            </form>
-
-        </div>
-    )
+function StationList({ stationList, onDeleteStation }) {
+  return (
+    <IonCard className="calculator-card">
+      <IonCardHeader>
+        <IonCardTitle>Stations ({stationList.length})</IonCardTitle>
+      </IonCardHeader>
+      <IonCardContent>
+        {stationList.length === 0 ? (
+          <p className="station-list-empty">
+            No stations have been added yet.
+          </p>
+        ) : (
+          <IonList lines="full">
+            {stationList.map((station, index) => (
+              <Station
+                key={station.id}
+                station={station}
+                label={stationLabel(station, index)}
+                onDelete={onDeleteStation}
+              />
+            ))}
+          </IonList>
+        )}
+      </IonCardContent>
+    </IonCard>
+  );
 }
 
-export default StationList
+export default StationList;
