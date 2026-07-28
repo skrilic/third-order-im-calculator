@@ -81,13 +81,13 @@ proposed compatible changes have been reviewed.
 
 ## Testing
 
-The current Vitest suite covers:
+The current Vitest suite contains 22 unit tests across three domain modules:
 
-- both ordered `2fx - fy` products;
-- unique `fx + fy - fz` combinations;
-- exclusion of zero and negative products;
-- fallback station labels;
-- rounding to two decimal places.
+- IM3 formulas, candidate counts, positivity filtering, fallback labels,
+  rounding, duplicate operands, and input immutability;
+- station-name trimming, numeric conversion, zero, and invalid frequencies;
+- CSV headers, UTF-8 BOM, semicolon delimiters, CRLF lines, quotes, nullish
+  values, and embedded delimiters/newlines.
 
 Run it with:
 
@@ -95,8 +95,8 @@ Run it with:
 npm test
 ```
 
-Recommended next tests are Ionic component interactions, CSV escaping/download,
-and an end-to-end extension popup smoke test.
+Recommended next tests are Ionic component interactions, the browser download
+side effect, and an end-to-end extension popup smoke test.
 
 ## Browser extension build
 

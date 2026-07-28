@@ -27,9 +27,11 @@ index.html
                 ├── AddStation
                 ├── StationList
                 │   └── Station
+                ├── normalizeStation(input)
                 ├── calculateIm3(stations)
                 ├── AgGridReact
                 └── ExportCSV
+                    └── createCsv(rows)
 ```
 
 `Calculation` owns only the source station list. Results are derived with
@@ -59,12 +61,14 @@ distinctness is based on array indices rather than JavaScript object identity.
 | `src/main.jsx` | Initializes Ionic, registers required AG Grid modules, and renders React. |
 | `src/App.jsx` | Provides the `IonApp` root. |
 | `src/components/Calculation.jsx` | Owns stations and composes the Ionic page, derived results, and grid. |
-| `src/components/AddStation.jsx` | Validates, normalizes, and submits station input. |
+| `src/components/AddStation.jsx` | Collects station input and delegates normalization to the domain layer. |
 | `src/components/StationList.jsx` | Renders the current Ionic station list. |
 | `src/components/Station.jsx` | Renders one station with an accessible delete button. |
-| `src/components/ExportCSV.jsx` | Escapes and downloads semicolon-delimited CSV without a third-party CSV package. |
+| `src/components/ExportCSV.jsx` | Downloads domain-serialized CSV without a third-party CSV package. |
 | `src/domain/calculateIm3.js` | Contains pure formula, labeling, filtering, and rounding logic. |
-| `src/domain/calculateIm3.test.js` | Verifies the domain rules with Vitest. |
+| `src/domain/normalizeStation.js` | Validates and normalizes station form values. |
+| `src/domain/createCsv.js` | Escapes and serializes result rows as spreadsheet-compatible CSV. |
+| `src/domain/*.test.js` | Contains 22 unit tests for the three domain modules. |
 
 ## Calculation behavior
 
@@ -149,7 +153,7 @@ security. It should remain part of CI and release verification.
 
 | Check | Result |
 | --- | --- |
-| `npm test` | Four domain tests pass. |
+| `npm test` | Twenty-two domain unit tests pass. |
 | `npm run build` | Vite production build succeeds. |
 | `npm audit` | Zero known vulnerabilities. |
 | `npx cap config` | TypeScript configuration loads successfully. |
@@ -163,13 +167,13 @@ security. It should remain part of CI and release verification.
 - Ionic components improve mobile layout and control semantics.
 - The same output contract is preserved for extensions and Capacitor.
 - CSV export no longer requires a separate parser dependency.
-- Tests cover the core numerical rules.
+- Tests cover numerical rules, input normalization, and CSV serialization.
 
 ## Remaining priorities
 
 ### High priority
 
-1. Add component tests for input validation, deletion, and CSV output.
+1. Add component tests for form feedback, deletion, and the download side effect.
 2. Perform manual and automated smoke tests of the Manifest V3 popup.
 3. Add CI steps for install, audit, test, build, and Capacitor config validation.
 4. Decide whether station state should persist locally.

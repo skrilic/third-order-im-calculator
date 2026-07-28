@@ -1,24 +1,10 @@
 import { IonButton, IonIcon } from "@ionic/react";
 import { downloadOutline } from "ionicons/icons";
-
-function escapeCsvField(value) {
-  return `"${String(value ?? "").replaceAll('"', '""')}"`;
-}
-
-function createCsv(rows) {
-  const lines = [
-    ["description", "frequency"],
-    ...rows.map((row) => [row.description, row.frequency])
-  ];
-
-  return lines
-    .map((line) => line.map(escapeCsvField).join(";"))
-    .join("\r\n");
-}
+import { createCsv } from "../domain/createCsv";
 
 function ExportCSV({ rows }) {
   function downloadCsv() {
-    const blob = new Blob(["\ufeff", createCsv(rows)], {
+    const blob = new Blob([createCsv(rows)], {
       type: "text/csv;charset=utf-8"
     });
     const url = URL.createObjectURL(blob);

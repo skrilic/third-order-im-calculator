@@ -8,6 +8,7 @@ import {
   IonText
 } from "@ionic/react";
 import { addOutline } from "ionicons/icons";
+import { normalizeStation } from "../domain/normalizeStation";
 
 const emptyStation = {
   name: "",
@@ -21,20 +22,13 @@ function AddStation({ onAddStation }) {
   function handleSubmit(event) {
     event.preventDefault();
 
-    const frequency = Number(station.frequency);
-    if (
-      String(station.frequency).trim() === "" ||
-      !Number.isFinite(frequency) ||
-      frequency < 0
-    ) {
-      setError("Enter a valid non-negative transmitting frequency.");
+    const normalized = normalizeStation(station);
+    if (normalized.error) {
+      setError(normalized.error);
       return;
     }
 
-    onAddStation({
-      name: station.name.trim(),
-      frequency
-    });
+    onAddStation(normalized.station);
     setStation(emptyStation);
     setError("");
   }

@@ -16,7 +16,7 @@ preserving web, browser-extension, and Capacitor output.
   and Ionicons.
 - Replaced the Papa Parse wrapper with a small local CSV serializer.
 - Extracted IM3 calculation into a pure domain module.
-- Added four Vitest domain tests.
+- Added Vitest unit tests for calculation, input normalization, and CSV output.
 - Replaced object-reference distinctness with index-based formula operands.
 - Added stable station IDs and consistent fallback labels.
 - Moved `@capacitor/cli` to `devDependencies`.
@@ -57,7 +57,7 @@ chunk groups separate AG Grid, Ionic, and React for caching and inspection.
 ## Verification outcome
 
 ```text
-npm test       4 tests passed
+npm test       22 tests passed
 npm run build  succeeded
 npm audit      0 known vulnerabilities
 npx cap config succeeded

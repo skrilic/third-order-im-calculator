@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { calculateIm3 } from "./calculateIm3";
 
 describe("calculateIm3", () => {
+  it("returns no products for fewer than two stations", () => {
+    expect(calculateIm3([])).toEqual([]);
+    expect(
+      calculateIm3([{ name: "A", frequency: 100 }])
+    ).toEqual([]);
+  });
+
   it("calculates both ordered two-frequency products", () => {
     const results = calculateIm3([
       { name: "A", frequency: 100 },
@@ -42,6 +49,17 @@ describe("calculateIm3", () => {
     });
   });
 
+  it("generates the expected unfiltered candidate count", () => {
+    const results = calculateIm3([
+      { name: "A", frequency: 100 },
+      { name: "B", frequency: 101 },
+      { name: "C", frequency: 102 },
+      { name: "D", frequency: 103 }
+    ]);
+
+    expect(results).toHaveLength(24);
+  });
+
   it("excludes zero and negative products", () => {
     const results = calculateIm3([
       { name: "A", frequency: 10 },
@@ -66,5 +84,28 @@ describe("calculateIm3", () => {
       description: "2*F0(100.126) - B(100)",
       frequency: "100.25"
     });
+  });
+
+  it("treats duplicate station entries as distinct operands", () => {
+    const results = calculateIm3([
+      { name: "A", frequency: 100 },
+      { name: "A", frequency: 100 }
+    ]);
+
+    expect(results).toHaveLength(2);
+    expect(results.every((result) => result.frequency === "100.00"))
+      .toBe(true);
+  });
+
+  it("does not mutate the station input", () => {
+    const stations = [
+      { id: "a", name: "A", frequency: 100 },
+      { id: "b", name: "B", frequency: 110 }
+    ];
+    const snapshot = structuredClone(stations);
+
+    calculateIm3(stations);
+
+    expect(stations).toEqual(snapshot);
   });
 });
