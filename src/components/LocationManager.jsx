@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  IonAlert,
   IonBadge,
   IonButton,
   IonIcon,
@@ -52,6 +53,7 @@ function LocationManager({ onCalculate }) {
   const [focusRequest, setFocusRequest] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState("");
+  const [permissionAlertOpen, setPermissionAlertOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -122,6 +124,12 @@ function LocationManager({ onCalculate }) {
       );
     } catch (locationError) {
       setError(translateError(locationError, t));
+      if (
+        locationError?.message === "errors.locationPermissionDenied" ||
+        locationError?.message === "errors.locationServicesDisabled"
+      ) {
+        setPermissionAlertOpen(true);
+      }
     } finally {
       setLocating(false);
     }
@@ -310,6 +318,13 @@ function LocationManager({ onCalculate }) {
         onDeleteLocation={handleDeleteLocation}
         onSaveTransmitter={handleSaveTransmitter}
         onDeleteTransmitter={handleDeleteTransmitter}
+      />
+      <IonAlert
+        isOpen={permissionAlertOpen}
+        header={t("locationPermission.title")}
+        message={t("locationPermission.message")}
+        buttons={[t("common.close")]}
+        onDidDismiss={() => setPermissionAlertOpen(false)}
       />
     </div>
   );

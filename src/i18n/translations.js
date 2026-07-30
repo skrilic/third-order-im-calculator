@@ -172,7 +172,9 @@ export const translations = {
     "errors.backupTooLarge": "Backup file too large (> 5 MB).",
     "errors.backupJson": "Invalid JSON file.",
     "errors.backupInvalid": "Backup contains invalid data.",
-    "errors.unknown": "An error occurred."
+    "errors.unknown": "An error occurred.",
+    "locationPermission.title": "Location Access Required",
+    "locationPermission.message": "Location access is denied or location services are disabled.\n\nTo enable location on your device:\n1. Open Settings\n2. Go to Apps → Intermod RF Sites\n3. Tap Permissions → Location\n4. Select \"Allow only while using the app\"\n5. Ensure GPS/Location is enabled in quick settings."
   },
   hr: {
     "nav.home": "Početna",
@@ -347,6 +349,8 @@ export const translations = {
     "errors.backupTooLarge": "Datoteka je veća od 5 MB.",
     "errors.backupJson": "Datoteka nije valjani JSON.",
     "errors.backupInvalid": "Datoteka sadrži nevaljane podatke.",
-    "errors.unknown": "Dogodila se pogreška."
+    "errors.unknown": "Dogodila se pogreška.",
+    "locationPermission.title": "Potreban je pristup lokaciji",
+    "locationPermission.message": "Pristup lokaciji je onemogućen ili je dozvola odbijena.\n\nKako biste omogućili lokaciju na uređaju:\n1. Otvorite Postavke uređaja (Settings)\n2. Idite na Aplikacije → Intermod RF Sites\n3. Odaberite Dozvole → Lokacija\n4. Postavite na „Dopusti dok se koristi aplikacija”\n5. Provjerite je li Lokacija (GPS) uključena u brzim postavkama."
   }
 };

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -19,6 +19,38 @@ const CARTO_DARK_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 const CARTO_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+function checkIsDark() {
+  return document.documentElement.classList.contains("ion-palette-dark");
+}
+
+function useDarkMode() {
+  const [isDark, setIsDark] = useState(checkIsDark);
+
+  useEffect(() => {
+    const updateTheme = () => {
+      setIsDark(checkIsDark());
+    };
+
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"]
+    });
+
+    const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
+    mediaQuery?.addEventListener?.("change", updateTheme);
+
+    updateTheme();
+
+    return () => {
+      observer.disconnect();
+      mediaQuery?.removeEventListener?.("change", updateTheme);
+    };
+  }, []);
+
+  return isDark;
+}
 
 function MapResizer() {
   const map = useMap();
@@ -124,7 +156,7 @@ function LocationMap({
   onMarkerClick
 }) {
   const { t } = useI18n();
-  const isDark = document.documentElement.classList.contains("ion-palette-dark");
+  const isDark = useDarkMode();
   const tileUrl = isDark ? CARTO_DARK_URL : CARTO_VOYAGER_URL;
 
   return (
@@ -138,6 +170,7 @@ function LocationMap({
         scrollWheelZoom
       >
         <TileLayer
+          key={tileUrl}
           attribution={CARTO_ATTRIBUTION}
           url={tileUrl}
           subdomains="abcd"
