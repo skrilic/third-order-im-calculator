@@ -1,40 +1,100 @@
 :root {
-  --ion-color-primary: #3056d3;
-  --ion-color-primary-rgb: 48, 86, 211;
+  --ion-color-primary: #4f46e5;
+  --ion-color-primary-rgb: 79, 70, 229;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #2a4cba;
-  --ion-color-primary-tint: #4567d7;
-  --ion-background-color: #f4f6fb;
-  --app-background: #f4f6fb;
-  --app-heading: #1f2a44;
-  --app-input-background: #f8f9fc;
-  --app-border: #d8deed;
-  --app-divider: #e2e6f0;
-  --app-muted-surface: #eef1f8;
-  --app-card-border: rgba(24, 39, 75, 0.08);
-  --app-card-shadow: rgba(24, 39, 75, 0.08);
+  --ion-color-primary-shade: #4338ca;
+  --ion-color-primary-tint: #6366f1;
+
+  --ion-background-color: #f8fafc;
+  --app-background: #f8fafc;
+  --app-heading: #0f172a;
+  --app-input-background: #ffffff;
+  --app-border: #e2e8f0;
+  --app-divider: #cbd5e1;
+  --app-muted-surface: #f1f5f9;
+  --app-card-border: rgba(148, 163, 184, 0.2);
+  --app-card-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06);
+
   --ion-font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 }
 
 :root.ion-palette-dark {
-  --ion-background-color: #0f1115;
-  --app-background: #0f1115;
-  --app-heading: #f1f4fb;
-  --app-input-background: #20242d;
-  --app-border: #3a4250;
-  --app-divider: #303641;
-  --app-muted-surface: #252a34;
-  --app-card-border: rgba(255, 255, 255, 0.1);
-  --app-card-shadow: rgba(0, 0, 0, 0.32);
+  --ion-color-primary: #6366f1;
+  --ion-color-primary-rgb: 99, 102, 241;
+  --ion-color-primary-shade: #4f46e5;
+  --ion-color-primary-tint: #818cf8;
+
+  --ion-background-color: #0b0f19;
+  --app-background: #0b0f19;
+  --app-heading: #f8fafc;
+  --app-input-background: #151c2c;
+  --app-border: #232d42;
+  --app-divider: #1e293b;
+  --app-muted-surface: #1e293b;
+  --app-card-border: rgba(255, 255, 255, 0.08);
+  --app-card-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
 }
 
 html,
 body,
 #root {
   min-height: 100%;
+}
+
+/* Glassmorphic Header & Toolbar */
+ion-header.app-header {
+  box-shadow: none;
+}
+
+ion-header.app-header ion-toolbar {
+  --background: rgba(248, 250, 252, 0.82);
+  --border-color: var(--app-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background-color 0.3s ease;
+}
+
+:root.ion-palette-dark ion-header.app-header ion-toolbar {
+  --background: rgba(11, 15, 25, 0.82);
+}
+
+.brand-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  object-fit: cover;
+}
+
+.brand-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--app-heading);
+}
+
+.brand-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--ion-color-primary);
+  text-transform: uppercase;
+}
+
+:root.ion-palette-dark .brand-badge {
+  background: rgba(99, 102, 241, 0.22);
 }
 
 .calculator-content {
@@ -45,28 +105,45 @@ body,
   width: min(100%, 960px);
   margin: 0 auto;
   padding: 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 .calculator-intro {
   margin: 4px 4px 18px;
   color: var(--ion-color-medium-shade);
   line-height: 1.5;
+  font-size: 0.95rem;
 }
 
 .page-heading {
   margin: 4px 4px 6px;
   color: var(--app-heading);
-  font-size: clamp(1.45rem, 4vw, 2rem);
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
+/* Glassmorphic Tab Bar */
 .app-tab-bar {
-  --background: var(--ion-card-background, var(--app-background));
-  border-top: 1px solid var(--app-divider);
+  --background: rgba(248, 250, 252, 0.85);
+  border-top: 1px solid var(--app-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+:root.ion-palette-dark .app-tab-bar {
+  --background: rgba(11, 15, 25, 0.85);
 }
 
 .app-tab-bar ion-tab-button {
-  --color: var(--ion-color-medium);
+  --color: #64748b;
   --color-selected: var(--ion-color-primary);
+  transition: all 0.2s ease;
+}
+
+.app-tab-bar ion-tab-button.tab-selected {
+  font-weight: 600;
 }
 
 .back-button {
@@ -81,10 +158,14 @@ body,
   color: var(--ion-color-medium-shade);
 }
 
+/* Premium Card Design */
 .calculator-card {
-  margin: 0 0 16px;
+  margin: 0 0 18px;
+  border-radius: 18px;
   border: 1px solid var(--app-card-border);
-  box-shadow: 0 10px 28px var(--app-card-shadow);
+  box-shadow: var(--app-card-shadow);
+  background: var(--app-input-background);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .station-form {
@@ -95,9 +176,9 @@ body,
 }
 
 .station-form ion-input {
-  --background: var(--app-input-background);
+  --background: var(--app-muted-surface);
   --border-color: var(--app-border);
-  --border-radius: 10px;
+  --border-radius: 12px;
   --highlight-color-focused: var(--ion-color-primary);
 }
 
@@ -111,29 +192,132 @@ body,
   margin: 0 0 12px;
 }
 
-.location-map-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin: 0 0 10px;
+/* Map & Floating Overlay Controls */
+.location-map-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--app-border);
 }
 
-.location-map-actions ion-spinner {
-  width: 18px;
-  height: 18px;
+.location-map-floating-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.fab-location-btn {
+  --border-radius: 28px;
+  --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  --padding-start: 14px;
+  --padding-end: 14px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+
+.location-status-badge {
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Dashboard Layout & Responsive Split Screen */
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.dashboard-map-section {
+  width: 100%;
+}
+
+.dashboard-list-section {
+  width: 100%;
+}
+
+.dashboard-locations-list {
+  margin: 0;
 }
 
 .location-map {
   width: 100%;
-  height: 410px;
+  height: 340px;
   overflow: hidden;
-  border: 1px solid var(--app-border);
-  border-radius: 12px;
+}
+
+/* Tablet & Landscape 2-Column Split Layout */
+@media (min-width: 768px), (min-aspect-ratio: 16/10) and (min-width: 600px) {
+  .dashboard-layout {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .dashboard-map-section {
+    flex: 1.35;
+    min-width: 0;
+  }
+
+  .location-map {
+    height: 480px;
+  }
+
+  .dashboard-list-section {
+    flex: 1;
+    min-width: 0;
+    max-height: 480px;
+    overflow-y: auto;
+  }
 }
 
 .location-map .leaflet-container {
   width: 100%;
   height: 100%;
   font-family: var(--ion-font-family);
+  background: var(--app-muted-surface);
+}
+
+/* Pulsing User Location Pins */
+.user-location-ping {
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+/* Sheet Modal Handle */
+ion-modal.sheet-modal {
+  --border-radius: 24px 24px 0 0;
+  --box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Interactive Touch active feedback */
+ion-button:active {
+  transform: scale(0.97);
+
 }
 
 .backup-manager {
@@ -301,6 +485,13 @@ body,
 
 .results-heading ion-card-title {
   font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.results-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .results-grid {
@@ -308,15 +499,63 @@ body,
   height: 390px;
 }
 
+/* Mobile Card View for Results */
+.results-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.result-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--app-muted-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.result-card-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.result-card-formula {
+  font-weight: 600;
+  color: var(--app-heading);
+  font-size: 0.95rem;
+}
+
+.result-card-freq {
+  font-family: ui-monospace, monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  background: rgba(79, 70, 229, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+:root.ion-palette-dark .result-card-freq {
+  background: rgba(99, 102, 241, 0.2);
+}
+
 :root.ion-palette-dark .results-grid {
-  --ag-background-color: #181b22;
+  --ag-background-color: #151c2c;
   --ag-foreground-color: #e8ebf2;
-  --ag-border-color: #3a4250;
-  --ag-header-background-color: #222731;
+  --ag-border-color: #232d42;
+  --ag-header-background-color: #1e293b;
   --ag-header-text-color: #f1f4fb;
-  --ag-odd-row-background-color: #1c2028;
-  --ag-row-hover-color: #29303c;
-  --ag-input-background-color: #20242d;
+  --ag-odd-row-background-color: #111726;
+  --ag-row-hover-color: #232d42;
+  --ag-input-background-color: #151c2c;
 }
 
 @media (max-width: 640px) {
@@ -329,7 +568,7 @@ body,
   }
 
   .location-map {
-    height: 330px;
+    height: 350px;
   }
 
   .coordinate-fields,

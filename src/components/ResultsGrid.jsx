@@ -1,10 +1,20 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
+  IonButton,
   IonCard,
   IonCardContent,
   IonCardHeader,
-  IonCardTitle
+  IonCardTitle,
+  IonIcon,
+  IonInput,
+  IonSegment,
+  IonSegmentButton
 } from "@ionic/react";
+import {
+  gridOutline,
+  listOutline,
+  searchOutline
+} from "ionicons/icons";
 import { AgGridReact } from "ag-grid-react";
 import { themeAlpine } from "ag-grid-community";
 import ExportCSV from "./ExportCSV";
@@ -12,6 +22,21 @@ import { useI18n } from "../i18n/I18nProvider";
 
 function ResultsGrid({ rows }) {
   const { t } = useI18n();
+  const [viewMode, setViewMode] = useState("auto"); // "auto" | "table" | "cards"
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredRows = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return rows;
+    }
+    const q = searchQuery.toLowerCase();
+    return rows.filter((r) => {
+      const descMatch = String(r.description ?? "").toLowerCase().includes(q);
+      const freqMatch = String(r.frequency ?? "").toLowerCase().includes(q);
+      return descMatch || freqMatch;
+    });
+  }, [rows, searchQuery]);
+
   const columnDefs = useMemo(
     () => [
       {
@@ -76,21 +101,74 @@ function ResultsGrid({ rows }) {
       <IonCardHeader>
         <div className="results-heading">
           <IonCardTitle>
-            {t("results.products", { count: rows.length })}
+            {t("results.products", { count: filteredRows.length })}
           </IonCardTitle>
-          <ExportCSV rows={rows} />
+          <div className="results-controls">
+            <IonSegment
+              value={viewMode}
+              onIonChange={(e) => setViewMode(e.detail.value)}
+              style={{ width: "auto" }}
+            >
+              <IonSegmentButton value="auto">
+                <IonIcon icon={gridOutline} />
+              </IonSegmentButton>
+              <IonSegmentButton value="cards">
+                <IonIcon icon={listOutline} />
+              </IonSegmentButton>
+            </IonSegment>
+            <ExportCSV rows={filteredRows} />
+          </div>
         </div>
       </IonCardHeader>
       <IonCardContent>
-        <div className="results-grid">
-          <AgGridReact
-            columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            localeText={localeText}
-            rowData={rows}
-            theme={themeAlpine}
-          />
-        </div>
+        {viewMode === "cards" ? (
+          <div>
+            <div style={{ marginBottom: "12px" }}>
+              <IonInput
+                placeholder={t("grid.filter")}
+                value={searchQuery}
+                onIonInput={(e) => setSearchQuery(e.detail.value ?? "")}
+                style={{
+                  "--background": "var(--app-muted-surface)",
+                  "--border-radius": "10px",
+                  paddingLeft: "8px"
+                }}
+              >
+                <IonIcon slot="start" icon={searchOutline} style={{ margin: "0 8px" }} />
+              </IonInput>
+            </div>
+            <div className="results-card-list">
+              {filteredRows.length === 0 ? (
+                <p className="station-list-empty" style={{ textAlign: "center", padding: "20px 0" }}>
+                  {t("grid.noRows")}
+                </p>
+              ) : (
+                filteredRows.map((row, index) => (
+                  <div key={row.id || index} className="result-card-item">
+                    <div className="result-card-desc">
+                      <span className="result-card-formula">{row.description}</span>
+                    </div>
+                    <span className="result-card-freq">
+                      {row.frequency !== null && row.frequency !== undefined
+                        ? `${Number(row.frequency).toFixed(2)} MHz`
+                        : "—"}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="results-grid">
+            <AgGridReact
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              localeText={localeText}
+              rowData={filteredRows}
+              theme={themeAlpine}
+            />
+          </div>
+        )}
       </IonCardContent>
     </IonCard>
   );

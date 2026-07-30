@@ -98,7 +98,8 @@ describe("IndexedDB CRUD", () => {
 
     expect(await database.getSnapshot()).toEqual({
       locations: [],
-      transmitters: []
+      transmitters: [],
+      adhocCalculations: []
     });
   });
 
@@ -110,6 +111,114 @@ describe("IndexedDB CRUD", () => {
         frequency: 100
       })
     ).rejects.toThrow("errors.locationMissing");
+  });
+
+  it("rejects a transmitter with a duplicate frequency at the same location", async () => {
+    const location = await database.saveLocation({
+      name: "Repeater Site",
+      latitude: 45.0,
+      longitude: 16.0
+    });
+
+    await database.saveTransmitter({
+      locationId: location.id,
+      name: "Tx 1",
+      frequency: 145.725
+    });
+
+    await expect(
+      database.saveTransmitter({
+        locationId: location.id,
+        name: "Tx 2 Duplicate",
+        frequency: 145.725
+      })
+    ).rejects.toThrow("errors.duplicateFrequency");
+  });
+
+  it("rejects saving a location with duplicate GPS coordinates", async () => {
+    await database.saveLocation({
+      name: "Site A",
+      latitude: 45.9002,
+      longitude: 15.9481
+    });
+
+    await expect(
+      database.saveLocation({
+        name: "Site B Duplicate GPS",
+        latitude: 45.9002,
+        longitude: 15.9481
+      })
+    ).rejects.toThrow("errors.duplicateLocation");
+  });
+
+  it("atomically imports geo data and merges duplicate GPS locations without duplicating", async () => {
+    const geoData1 = {
+      locations: [
+        { id: "loc-1", name: "Sljeme", latitude: 45.9002, longitude: 15.9481 },
+        { id: "loc-2", name: "Trebević", latitude: 43.8563, longitude: 18.4131 }
+      ],
+      transmitters: [
+        { id: "tx-1", locationId: "loc-1", name: "Sljeme FM1", frequency: 88.1 },
+        { id: "tx-2", locationId: "loc-1", name: "Sljeme FM2", frequency: 93.7 },
+        { id: "tx-3", locationId: "loc-2", name: "Trebević PMR", frequency: 145.625 }
+      ]
+    };
+
+    await database.importGeoData(geoData1);
+
+    // Re-importing same coordinates under a different name/ID
+    const geoData2 = {
+      locations: [
+        { id: "loc-3", name: "Sljeme Alt Name", latitude: 45.9002, longitude: 15.9481 }
+      ],
+      transmitters: [
+        { id: "tx-4", locationId: "loc-3", name: "Sljeme FM3", frequency: 101.1 },
+        { id: "tx-5", locationId: "loc-3", name: "Sljeme FM1 Dup", frequency: 88.1 }
+      ]
+    };
+
+    await database.importGeoData(geoData2);
+
+    const snapshot = await database.getSnapshot();
+    expect(snapshot.locations).toHaveLength(2); // Still 2 locations!
+    expect(snapshot.transmitters).toHaveLength(4); // 88.1 dup was skipped, 101.1 added!
+  });
+
+  it("creates, updates, and deletes an ad-hoc calculation", async () => {
+    const saved = await database.saveAdhocCalculation({
+      name: "Adhoc Test",
+      stations: [{ name: "Tx 1", frequency: 145.5 }]
+    });
+
+    expect(saved.name).toBe("Adhoc Test");
+    expect(saved.stations).toHaveLength(1);
+
+    const list = await database.getAdhocCalculations();
+    expect(list).toHaveLength(1);
+    expect(list[0].id).toBe(saved.id);
+
+    await database.saveAdhocCalculation(
+      {
+        ...saved,
+        name: "Updated Adhoc Test"
+      },
+      saved
+    );
+
+    const updatedList = await database.getAdhocCalculations();
+    expect(updatedList[0].name).toBe("Updated Adhoc Test");
+
+    await database.deleteAdhocCalculation(saved.id);
+    expect(await database.getAdhocCalculations()).toEqual([]);
+  });
+
+  it("rejects an ad-hoc calculation without a name", async () => {
+    await expect(
+      database.saveAdhocCalculation({
+        name: "   ",
+        stations: []
+      })
+    ).rejects.toThrow("errors.adhocNameRequired");
   });
 });
 
@@ -203,7 +312,8 @@ describe("IndexedDB import", () => {
           longitude: 19
         }
       ],
-      transmitters: []
+      transmitters: [],
+      adhocCalculations: []
     });
   });
 

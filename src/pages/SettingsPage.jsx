@@ -1,19 +1,28 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonContent,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonListHeader,
+  IonNote,
   IonPage,
   IonSelect,
   IonSelectOption,
   IonText
 } from "@ionic/react";
+import {
+  colorPaletteOutline,
+  informationCircleOutline,
+  languageOutline
+} from "ionicons/icons";
 import AppHeader from "../components/AppHeader";
 import AppTabBar from "../components/AppTabBar";
 import BackupManager from "../components/BackupManager";
+import ThemeButton from "../components/ThemeButton";
 import { getSnapshot } from "../data/database";
+import packageInfo from "../../package.json";
 import {
   translateError,
   useI18n
@@ -49,44 +58,19 @@ function SettingsPage() {
       <AppHeader />
       <IonContent className="calculator-content">
         <main className="calculator-shell">
-          <h1 className="page-heading">{t("settings.title")}</h1>
-          <p className="calculator-intro">{t("settings.intro")}</p>
-
-          <IonCard className="calculator-card">
-            <IonCardHeader>
-              <IonCardTitle>{t("settings.backup")}</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <BackupManager
-                locationCount={counts.locations}
-                transmitterCount={counts.transmitters}
-                onImported={refreshCounts}
-              />
-              {error ? (
-                <IonText color="danger">
-                  <p>{error}</p>
-                </IonText>
-              ) : null}
-            </IonCardContent>
-          </IonCard>
-
-          <IonCard className="calculator-card">
-            <IonCardHeader>
-              <IonCardTitle>{t("settings.language")}</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <p className="settings-description">
-                {t("settings.languageDescription")}
-              </p>
+          <IonList inset={true}>
+            <IonListHeader>
+              <IonLabel>{t("settings.preferences")}</IonLabel>
+            </IonListHeader>
+            <IonItem>
+              <IonIcon slot="start" icon={languageOutline} color="primary" />
+              <IonLabel>{t("settings.languageLabel")}</IonLabel>
               <IonSelect
-                label={t("settings.languageLabel")}
-                labelPlacement="stacked"
+                slot="end"
                 value={language}
                 interface="action-sheet"
                 cancelText={t("common.cancel")}
-                onIonChange={(event) =>
-                  setLanguage(event.detail.value)
-                }
+                onIonChange={(event) => setLanguage(event.detail.value)}
               >
                 <IonSelectOption value="en">
                   {t("language.en")}
@@ -95,8 +79,38 @@ function SettingsPage() {
                   {t("language.hr")}
                 </IonSelectOption>
               </IonSelect>
-            </IonCardContent>
-          </IonCard>
+            </IonItem>
+            <IonItem>
+              <IonIcon slot="start" icon={colorPaletteOutline} color="primary" />
+              <IonLabel>{t("theme.appearance")}</IonLabel>
+              <div slot="end">
+                <ThemeButton />
+              </div>
+            </IonItem>
+          </IonList>
+
+          <BackupManager
+            locationCount={counts.locations}
+            transmitterCount={counts.transmitters}
+            onImported={refreshCounts}
+          />
+
+          {error ? (
+            <IonText color="danger" style={{ padding: "0 16px" }}>
+              <p>{error}</p>
+            </IonText>
+          ) : null}
+
+          <IonList inset={true}>
+            <IonListHeader>
+              <IonLabel>{t("settings.about")}</IonLabel>
+            </IonListHeader>
+            <IonItem>
+              <IonIcon slot="start" icon={informationCircleOutline} color="medium" />
+              <IonLabel>{t("settings.version")}</IonLabel>
+              <IonNote slot="end">v{packageInfo.version}</IonNote>
+            </IonItem>
+          </IonList>
         </main>
       </IonContent>
       <AppTabBar activeTab="settings" />

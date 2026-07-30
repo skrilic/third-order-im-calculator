@@ -1,15 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  IonBadge,
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonIcon,
+  IonItem,
+  IonItemOption,
+  IonItemOptions,
+  IonItemSliding,
+  IonLabel,
+  IonList,
+  IonListHeader,
+  IonNote,
   IonSpinner,
   IonText
 } from "@ionic/react";
-import { locateOutline } from "ionicons/icons";
+import {
+  addOutline,
+  calculatorOutline,
+  createOutline,
+  locateOutline,
+  locationOutline,
+  trashOutline
+} from "ionicons/icons";
 import {
   deleteLocation,
   deleteTransmitter,
@@ -115,54 +127,148 @@ function LocationManager({ onCalculate }) {
     }
   }
 
+  function focusLocationOnMap(location) {
+    setFocusRequest({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      requestId: Date.now()
+    });
+  }
+
   return (
-    <IonCard className="calculator-card">
-      <IonCardHeader>
-        <IonCardTitle>{t("locations.cardTitle")}</IonCardTitle>
-      </IonCardHeader>
-      <IonCardContent>
-        <p className="location-help">
-          {t("locations.help")}
-        </p>
-        <div className="location-map-actions">
-          <IonButton
-            size="small"
-            fill="outline"
-            disabled={locating}
-            onClick={centerOnDevice}
-          >
-            {locating ? (
-              <IonSpinner slot="start" name="crescent" />
-            ) : (
-              <IonIcon slot="start" icon={locateOutline} />
-            )}
-            {locating
-              ? t("locations.locating")
-              : t("locations.center")}
-          </IonButton>
+    <div className="dashboard-layout">
+      {/* Map Column / Section */}
+      <div className="dashboard-map-section">
+        <div className="location-map-wrapper">
+          <div className="location-map-floating-controls">
+            <IonButton
+              size="small"
+              shape="round"
+              className="fab-location-btn"
+              color="primary"
+              disabled={locating}
+              onClick={centerOnDevice}
+            >
+              {locating ? (
+                <IonSpinner slot="start" name="crescent" />
+              ) : (
+                <IonIcon slot="start" icon={locateOutline} />
+              )}
+              {locating
+                ? t("locations.locating")
+                : t("locations.center")}
+            </IonButton>
+            {locationStatus ? (
+              <div className="location-status-badge">
+                {locationStatus}
+              </div>
+            ) : null}
+          </div>
+          <LocationMap
+            locations={snapshot.locations}
+            selectedLocationId={activeLocationId}
+            userPosition={userPosition}
+            focusRequest={focusRequest}
+            onMapClick={setNewCoordinates}
+            onMarkerClick={(location) =>
+              setActiveLocationId(location.id)
+            }
+          />
         </div>
-        <LocationMap
-          locations={snapshot.locations}
-          selectedLocationId={activeLocationId}
-          userPosition={userPosition}
-          focusRequest={focusRequest}
-          onMapClick={setNewCoordinates}
-          onMarkerClick={(location) =>
-            setActiveLocationId(location.id)
-          }
-        />
+      </div>
+
+      {/* Saved Locations List Section */}
+      <div className="dashboard-list-section">
+        <IonList inset={true} className="dashboard-locations-list">
+          <IonListHeader>
+            <IonLabel>{t("locations.cardTitle")}</IonLabel>
+            <IonBadge color="primary" slot="end">
+              {snapshot.locations.length}
+            </IonBadge>
+          </IonListHeader>
+
+          {snapshot.locations.length === 0 ? (
+            <IonItem lines="none">
+              <IonLabel className="ion-text-wrap" color="medium" style={{ fontSize: "0.9rem" }}>
+                {t("locations.empty")}
+              </IonLabel>
+            </IonItem>
+          ) : (
+            snapshot.locations.map((location) => {
+              const txCount = snapshot.transmitters.filter(
+                (tx) => tx.locationId === location.id
+              ).length;
+
+              return (
+                <IonItemSliding key={location.id}>
+                  <IonItem
+                    button
+                    detail={false}
+                    onClick={() => setActiveLocationId(location.id)}
+                  >
+                    <IonIcon slot="start" icon={locationOutline} color="primary" />
+                    <IonLabel>
+                      <h2>{location.name}</h2>
+                      <p>
+                        {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                      </p>
+                    </IonLabel>
+                    <IonBadge slot="end" color="light" style={{ fontSize: "0.78rem" }}>
+                      {txCount} {t("transmitter.countTag")}
+                    </IonBadge>
+                    <IonButton
+                      slot="end"
+                      fill="clear"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        focusLocationOnMap(location);
+                      }}
+                      title={t("locations.center")}
+                    >
+                      <IonIcon slot="icon-only" icon={locateOutline} />
+                    </IonButton>
+                    <IonButton
+                      slot="end"
+                      fill="clear"
+                      size="small"
+                      color="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCalculate(location.id);
+                      }}
+                      title={t("location.calculate")}
+                    >
+                      <IonIcon slot="icon-only" icon={calculatorOutline} />
+                    </IonButton>
+                  </IonItem>
+
+                  <IonItemOptions side="end">
+                    <IonItemOption
+                      color="primary"
+                      onClick={() => setEditingLocation(location)}
+                    >
+                      <IonIcon slot="icon-only" icon={createOutline} />
+                    </IonItemOption>
+                    <IonItemOption
+                      color="danger"
+                      onClick={() => handleDeleteLocation(location.id)}
+                    >
+                      <IonIcon slot="icon-only" icon={trashOutline} />
+                    </IonItemOption>
+                  </IonItemOptions>
+                </IonItemSliding>
+              );
+            })
+          )}
+        </IonList>
 
         {error ? (
-          <IonText color="danger">
+          <IonText color="danger" style={{ display: "block", padding: "0 16px" }}>
             <p>{error}</p>
           </IonText>
         ) : null}
-        {locationStatus ? (
-          <IonText color="success">
-            <p>{locationStatus}</p>
-          </IonText>
-        ) : null}
-      </IonCardContent>
+      </div>
 
       <LocationFormModal
         isOpen={Boolean(newCoordinates) || Boolean(editingLocation)}
@@ -187,7 +293,7 @@ function LocationManager({ onCalculate }) {
         onSaveTransmitter={handleSaveTransmitter}
         onDeleteTransmitter={handleDeleteTransmitter}
       />
-    </IonCard>
+    </div>
   );
 }
 

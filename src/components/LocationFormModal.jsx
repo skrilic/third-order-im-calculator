@@ -65,7 +65,14 @@ function LocationFormModal({
   }
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onDismiss}>
+    <IonModal
+      isOpen={isOpen}
+      initialBreakpoint={0.65}
+      breakpoints={[0, 0.65, 0.95]}
+      handle={true}
+      className="sheet-modal"
+      onDidDismiss={onDismiss}
+    >
       <IonHeader>
         <IonToolbar>
           <IonTitle>

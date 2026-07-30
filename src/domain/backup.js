@@ -175,8 +175,9 @@ export function createBackup(
     schemaVersion: BACKUP_SCHEMA_VERSION,
     appVersion,
     exportedAt,
-    locations: structuredClone(snapshot.locations),
-    transmitters: structuredClone(snapshot.transmitters)
+    locations: structuredClone(snapshot.locations || []),
+    transmitters: structuredClone(snapshot.transmitters || []),
+    adhocCalculations: structuredClone(snapshot.adhocCalculations || [])
   };
 }
 
@@ -204,36 +205,40 @@ export function parseBackupJson(text) {
 
 export function analyzeImport(current, incoming) {
   const currentLocationIds = new Set(
-    current.locations.map((location) => location.id)
+    (current.locations || []).map((location) => location.id)
   );
   const currentTransmitterIds = new Set(
-    current.transmitters.map((transmitter) => transmitter.id)
+    (current.transmitters || []).map((transmitter) => transmitter.id)
   );
 
   return {
-    locations: incoming.locations.length,
-    transmitters: incoming.transmitters.length,
-    locationConflicts: incoming.locations.filter((location) =>
+    locations: (incoming.locations || []).length,
+    transmitters: (incoming.transmitters || []).length,
+    locationConflicts: (incoming.locations || []).filter((location) =>
       currentLocationIds.has(location.id)
     ).length,
-    transmitterConflicts: incoming.transmitters.filter((transmitter) =>
+    transmitterConflicts: (incoming.transmitters || []).filter((transmitter) =>
       currentTransmitterIds.has(transmitter.id)
     ).length
   };
 }
 
 function mergeById(current, incoming) {
-  const merged = new Map(current.map((record) => [record.id, record]));
-  incoming.forEach((record) => merged.set(record.id, record));
+  const merged = new Map((current || []).map((record) => [record.id, record]));
+  (incoming || []).forEach((record) => merged.set(record.id, record));
   return [...merged.values()];
 }
 
 export function mergeSnapshots(current, incoming) {
   return {
-    locations: mergeById(current.locations, incoming.locations),
+    locations: mergeById(current.locations || [], incoming.locations || []),
     transmitters: mergeById(
-      current.transmitters,
-      incoming.transmitters
+      current.transmitters || [],
+      incoming.transmitters || []
+    ),
+    adhocCalculations: mergeById(
+      current.adhocCalculations || [],
+      incoming.adhocCalculations || []
     )
   };
 }

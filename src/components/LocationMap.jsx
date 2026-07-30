@@ -10,14 +10,45 @@ import {
 import { useI18n } from "../i18n/I18nProvider";
 import { centerMapOnPosition } from "../utils/mapView";
 
-const DEFAULT_CENTER = [43.8563, 18.4131];
-const DEFAULT_ZOOM = 7;
-const TILE_URL =
-  import.meta.env.VITE_MAP_TILE_URL ??
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const TILE_ATTRIBUTION =
-  import.meta.env.VITE_MAP_TILE_ATTRIBUTION ??
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const DEFAULT_CENTER = [43.772643, 17.781372];
+const DEFAULT_ZOOM = 8;
+
+const CARTO_VOYAGER_URL =
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+const CARTO_DARK_URL =
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const CARTO_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+function MapResizer() {
+  const map = useMap();
+
+  useEffect(() => {
+    map.invalidateSize();
+
+    const timer1 = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
+    const timer2 = setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [map]);
+
+  return null;
+}
 
 function MapClickHandler({ onMapClick }) {
   useMapEvents({
@@ -36,20 +67,37 @@ function FitLocations({ locations }) {
   const map = useMap();
 
   useEffect(() => {
-    if (locations.length === 1) {
-      map.setView(
-        [locations[0].latitude, locations[0].longitude],
-        13
-      );
-    } else if (locations.length > 1) {
-      map.fitBounds(
-        locations.map((location) => [
-          location.latitude,
-          location.longitude
-        ]),
-        { padding: [24, 24] }
-      );
+    if (!locations || locations.length === 0) {
+      return;
     }
+
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+
+      const lats = locations.map((l) => l.latitude);
+      const lngs = locations.map((l) => l.longitude);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+
+      const latSpread = maxLat - minLat;
+      const lngSpread = maxLng - minLng;
+
+      if (latSpread < 0.005 && lngSpread < 0.005) {
+        map.setView([lats[0], lngs[0]], 11);
+      } else {
+        map.fitBounds(
+          [
+            [minLat, minLng],
+            [maxLat, maxLng]
+          ],
+          { padding: [50, 50], maxZoom: 12 }
+        );
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [locations, map]);
 
   return null;
@@ -76,6 +124,8 @@ function LocationMap({
   onMarkerClick
 }) {
   const { t } = useI18n();
+  const isDark = document.documentElement.classList.contains("ion-palette-dark");
+  const tileUrl = isDark ? CARTO_DARK_URL : CARTO_VOYAGER_URL;
 
   return (
     <div
@@ -88,9 +138,12 @@ function LocationMap({
         scrollWheelZoom
       >
         <TileLayer
-          attribution={TILE_ATTRIBUTION}
-          url={TILE_URL}
+          attribution={CARTO_ATTRIBUTION}
+          url={tileUrl}
+          subdomains="abcd"
+          maxZoom={19}
         />
+        <MapResizer />
         <MapClickHandler onMapClick={onMapClick} />
         <FitLocations locations={locations} />
         <FocusPosition request={focusRequest} />
@@ -100,12 +153,13 @@ function LocationMap({
               userPosition.latitude,
               userPosition.longitude
             ]}
-            radius={8}
+            radius={9}
             pathOptions={{
               color: "#ffffff",
-              fillColor: "#0a84ff",
+              fillColor: "#6366f1",
               fillOpacity: 1,
-              weight: 3
+              weight: 3,
+              className: "user-location-ping"
             }}
             bubblingMouseEvents={false}
           >
@@ -123,16 +177,16 @@ function LocationMap({
           <CircleMarker
             key={location.id}
             center={[location.latitude, location.longitude]}
-            radius={location.id === selectedLocationId ? 11 : 9}
+            radius={location.id === selectedLocationId ? 12 : 9}
             pathOptions={{
               color:
                 location.id === selectedLocationId
-                  ? "#1739a4"
-                  : "#3056d3",
+                  ? "#ffffff"
+                  : "#4f46e5",
               fillColor:
                 location.id === selectedLocationId
-                  ? "#f4b740"
-                  : "#6f8ef6",
+                  ? "#f59e0b"
+                  : "#6366f1",
               fillOpacity: 0.95,
               weight: 3
             }}

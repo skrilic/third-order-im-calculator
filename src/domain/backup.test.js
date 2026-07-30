@@ -151,7 +151,8 @@ describe("backup serialization and import planning", () => {
         { id: "location-1", name: "New" },
         { id: "location-2", name: "Keep" }
       ],
-      transmitters: [{ id: "transmitter-1", name: "Added" }]
+      transmitters: [{ id: "transmitter-1", name: "Added" }],
+      adhocCalculations: []
     });
   });
 });

@@ -11,11 +11,7 @@ function HomePage() {
     <IonPage>
       <AppHeader />
       <IonContent className="calculator-content">
-        <main className="calculator-shell">
-          <h1 className="page-heading">{t("home.title")}</h1>
-          <p className="calculator-intro">
-            {t("home.intro")}
-          </p>
+        <main className="calculator-shell" style={{ padding: "8px" }}>
           <LocationManager
             onCalculate={(locationId) =>
               navigateTo(

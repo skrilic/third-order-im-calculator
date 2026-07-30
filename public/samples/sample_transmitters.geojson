@@ -1,0 +1,38 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [15.9481, 45.9002]
+      },
+      "properties": {
+        "name": "Sljeme Zagreb FM",
+        "frequency": 88.1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [15.9481, 45.9002]
+      },
+      "properties": {
+        "name": "Sljeme Zagreb FM2",
+        "frequency": 93.7
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [18.4131, 43.8563]
+      },
+      "properties": {
+        "name": "Trebević Sarajevo PMR",
+        "frequency": 145.625
+      }
+    }
+  ]
+}

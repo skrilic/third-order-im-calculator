@@ -93,16 +93,25 @@ not yet included; add the selected platform before running sync/open commands.
 
 - [User guide](docs/index.md)
 - [Location database and backup guide](docs/DATA_MANAGEMENT.md)
+- [Sample test data and external databases](docs/SAMPLES_DATA.md)
 - [Geolocation integration and native permissions](docs/GEOLOCATION.md)
 - [Development and distribution guide](docs/DEVELOPMENT.md)
 - [Architecture and project analysis](docs/PROJECT_ANALYSIS.md)
 - [Vite and Ionic migration record](docs/MIGRATION_VITE_IONIC.md)
 
+## Sample Test Data
+
+For testing the GeoJSON/CSV transmitter importer, ready-to-use sample files are provided in `public/samples/`:
+- `public/samples/sample_transmitters.csv`
+- `public/samples/sample_transmitters.geojson`
+
+See [docs/SAMPLES_DATA.md](docs/SAMPLES_DATA.md) for details and external database references.
+
 ## Current limitations
 
 - Manual calculation entries are held only in memory and disappear on refresh;
-  saved locations and transmitters persist in IndexedDB.
-- IndexedDB is local to each browser profile, extension origin, or native
+  saved locations and transmitters persist in SQLite (or IndexedDB in browser).
+- IndexedDB/SQLite storage is local to each browser profile, extension origin, or native
   WebView. Use JSON export to move or preserve data.
 - Frequency units are not enforced.
 - Equal output frequencies are retained as separate formula products.

@@ -2,28 +2,42 @@ import { useRef, useState } from "react";
 import {
   IonButton,
   IonButtons,
+  IonContent,
+  IonFooter,
+  IonHeader,
   IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonListHeader,
   IonModal,
+  IonNote,
   IonText,
   IonTitle,
-  IonToolbar,
-  IonHeader,
-  IonContent,
-  IonFooter
+  IonToolbar
 } from "@ionic/react";
 import {
   cloudDownloadOutline,
   cloudUploadOutline,
+  documentTextOutline,
+  serverOutline,
   shieldCheckmarkOutline
 } from "ionicons/icons";
 import packageInfo from "../../package.json";
+import GeoImportModal from "./GeoImportModal";
 import {
   analyzeImport,
   createBackup,
   MAX_BACKUP_BYTES,
   parseBackupJson
 } from "../domain/backup";
-import { getSnapshot, importSnapshot } from "../data/database";
+import {
+  getSnapshot,
+  importGeoData,
+  importSnapshot,
+  saveLocation,
+  saveTransmitter
+} from "../data/database";
 import { downloadBlob } from "../utils/download";
 import { useI18n } from "../i18n/I18nProvider";
 
@@ -42,7 +56,7 @@ function BackupManager({ locationCount, transmitterCount, onImported }) {
   const [candidate, setCandidate] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [importing, setImporting] = useState(false);
-  const [lastExport, setLastExport] = useState("");
+  const [isGeoModalOpen, setIsGeoModalOpen] = useState(false);
 
   async function exportBackup() {
     setError("");
@@ -59,7 +73,6 @@ function BackupManager({ locationCount, transmitterCount, onImported }) {
         }),
         backupFilename(now)
       );
-      setLastExport(now.toISOString());
       setStatus("backup.downloaded");
     } catch (exportError) {
       setError(
@@ -124,37 +137,45 @@ function BackupManager({ locationCount, transmitterCount, onImported }) {
     }
   }
 
+  async function handleGeoImport(geoData) {
+    setError("");
+    try {
+      await importGeoData(geoData);
+      setStatus("backup.merged");
+      await onImported();
+    } catch (geoErr) {
+      setError(geoErr.message ? geoErr.message : "errors.unknown");
+    }
+  }
+
   return (
-    <section
-      className="backup-manager"
-      aria-label={t("settings.backup")}
-    >
-      <div>
-        <p>
-          {t("backup.counts", {
-            locations: locationCount,
-            transmitters: transmitterCount
-          })}
-          {lastExport
-            ? ` · ${t("backup.lastExport", {
-                date: new Date(lastExport).toLocaleString(language)
-              })}`
-            : ""}
-        </p>
-      </div>
-      <div className="backup-actions">
-        <IonButton size="small" fill="outline" onClick={exportBackup}>
-          <IonIcon slot="start" icon={cloudDownloadOutline} />
-          {t("backup.export")}
-        </IonButton>
-        <IonButton
-          size="small"
-          fill="outline"
-          onClick={() => fileInput.current?.click()}
-        >
-          <IonIcon slot="start" icon={cloudUploadOutline} />
-          {t("backup.import")}
-        </IonButton>
+    <>
+      <IonList inset={true}>
+        <IonListHeader>
+          <IonLabel>{t("settings.backup")}</IonLabel>
+        </IonListHeader>
+        <IonItem>
+          <IonIcon slot="start" icon={serverOutline} color="secondary" />
+          <IonLabel>{t("backup.database")}</IonLabel>
+          <IonNote slot="end">
+            {t("backup.counts", {
+              locations: locationCount,
+              transmitters: transmitterCount
+            })}
+          </IonNote>
+        </IonItem>
+        <IonItem button onClick={exportBackup}>
+          <IonIcon slot="start" icon={cloudDownloadOutline} color="primary" />
+          <IonLabel>{t("backup.export")}</IonLabel>
+        </IonItem>
+        <IonItem button onClick={() => fileInput.current?.click()}>
+          <IonIcon slot="start" icon={cloudUploadOutline} color="primary" />
+          <IonLabel>{t("backup.import")}</IonLabel>
+        </IonItem>
+        <IonItem button onClick={() => setIsGeoModalOpen(true)}>
+          <IonIcon slot="start" icon={documentTextOutline} color="tertiary" />
+          <IonLabel>{t("geo.importButton")}</IonLabel>
+        </IonItem>
         <input
           ref={fileInput}
           className="visually-hidden"
@@ -162,98 +183,108 @@ function BackupManager({ locationCount, transmitterCount, onImported }) {
           accept="application/json,.json"
           onChange={chooseFile}
         />
-      </div>
-      {status ? (
-        <IonText color="success" className="backup-message">
-          <IonIcon icon={shieldCheckmarkOutline} />
-          {t(status)}
-        </IonText>
-      ) : null}
-      {error ? (
-        <IonText color="danger" className="backup-message">
-          {t(error)}
-        </IonText>
-      ) : null}
-
-      <IonModal
-        isOpen={Boolean(candidate)}
-        onDidDismiss={() => {
-          setCandidate(null);
-          setAnalysis(null);
-        }}
-      >
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>{t("backup.importTitle")}</IonTitle>
-            <IonButtons slot="end">
-              <IonButton
-                onClick={() => {
-                  setCandidate(null);
-                  setAnalysis(null);
-                }}
-              >
-                {t("common.cancel")}
-              </IonButton>
-            </IonButtons>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent className="ion-padding">
-          <p>
-            {t("backup.from", {
-              date: candidate?.exportedAt
-                ? new Date(candidate.exportedAt).toLocaleString(language)
-                : ""
-            })}
-          </p>
-          <dl className="import-summary">
-            <div>
-              <dt>{t("backup.locations")}</dt>
-              <dd>{analysis?.locations ?? 0}</dd>
-            </div>
-            <div>
-              <dt>{t("backup.transmitters")}</dt>
-              <dd>{analysis?.transmitters ?? 0}</dd>
-            </div>
-            <div>
-              <dt>{t("backup.conflicts")}</dt>
-              <dd>
-                {(analysis?.locationConflicts ?? 0) +
-                  (analysis?.transmitterConflicts ?? 0)}
-              </dd>
-            </div>
-          </dl>
-          <p>{t("backup.explanation")}</p>
-          {error ? (
-            <IonText color="danger">
-              <p>{t(error)}</p>
+        {status ? (
+          <IonItem lines="none">
+            <IonText color="success" className="backup-message">
+              <IonIcon icon={shieldCheckmarkOutline} style={{ marginRight: "6px" }} />
+              {t(status)}
             </IonText>
-          ) : null}
-          <IonButton fill="outline" onClick={exportBackup}>
-            <IonIcon slot="start" icon={cloudDownloadOutline} />
-            {t("backup.exportFirst")}
-          </IonButton>
-        </IonContent>
-        <IonFooter>
-          <IonToolbar>
-            <IonButtons slot="end">
-              <IonButton
-                disabled={importing}
-                onClick={() => performImport("merge")}
-              >
-                {t("backup.merge")}
-              </IonButton>
-              <IonButton
-                color="danger"
-                disabled={importing}
-                onClick={() => performImport("replace")}
-              >
-                {t("backup.replace")}
-              </IonButton>
-            </IonButtons>
-          </IonToolbar>
-        </IonFooter>
-      </IonModal>
-    </section>
+          </IonItem>
+        ) : null}
+        {error ? (
+          <IonItem lines="none">
+            <IonText color="danger" className="backup-message">
+              {t(error)}
+            </IonText>
+          </IonItem>
+        ) : null}
+
+        <IonModal
+          isOpen={Boolean(candidate)}
+          onDidDismiss={() => {
+            setCandidate(null);
+            setAnalysis(null);
+          }}
+        >
+          <IonHeader>
+            <IonToolbar>
+              <IonTitle>{t("backup.importTitle")}</IonTitle>
+              <IonButtons slot="end">
+                <IonButton
+                  onClick={() => {
+                    setCandidate(null);
+                    setAnalysis(null);
+                  }}
+                >
+                  {t("common.cancel")}
+                </IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent className="ion-padding">
+            <p>
+              {t("backup.from", {
+                date: candidate?.exportedAt
+                  ? new Date(candidate.exportedAt).toLocaleString(language)
+                  : ""
+              })}
+            </p>
+            <dl className="import-summary">
+              <div>
+                <dt>{t("backup.locations")}</dt>
+                <dd>{analysis?.locations ?? 0}</dd>
+              </div>
+              <div>
+                <dt>{t("backup.transmitters")}</dt>
+                <dd>{analysis?.transmitters ?? 0}</dd>
+              </div>
+              <div>
+                <dt>{t("backup.conflicts")}</dt>
+                <dd>
+                  {(analysis?.locationConflicts ?? 0) +
+                    (analysis?.transmitterConflicts ?? 0)}
+                </dd>
+              </div>
+            </dl>
+            <p>{t("backup.explanation")}</p>
+            {error ? (
+              <IonText color="danger">
+                <p>{t(error)}</p>
+              </IonText>
+            ) : null}
+            <IonButton fill="outline" onClick={exportBackup}>
+              <IonIcon slot="start" icon={cloudDownloadOutline} />
+              {t("backup.exportFirst")}
+            </IonButton>
+          </IonContent>
+          <IonFooter>
+            <IonToolbar>
+              <IonButtons slot="end">
+                <IonButton
+                  disabled={importing}
+                  onClick={() => performImport("merge")}
+                >
+                  {t("backup.merge")}
+                </IonButton>
+                <IonButton
+                  color="danger"
+                  disabled={importing}
+                  onClick={() => performImport("replace")}
+                >
+                  {t("backup.replace")}
+                </IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonFooter>
+        </IonModal>
+      </IonList>
+
+      <GeoImportModal
+        isOpen={isGeoModalOpen}
+        onDismiss={() => setIsGeoModalOpen(false)}
+        onImport={handleGeoImport}
+      />
+    </>
   );
 }
 

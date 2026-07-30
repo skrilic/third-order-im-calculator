@@ -114,6 +114,10 @@ function LocationDetailsModal({
     <>
       <IonModal
         isOpen={Boolean(location)}
+        initialBreakpoint={0.55}
+        breakpoints={[0, 0.55, 0.95]}
+        handle={true}
+        className="sheet-modal"
         onDidDismiss={onDismiss}
       >
         <IonHeader>

@@ -51,7 +51,7 @@ export function normalizeLocation(
     error: "",
     location: {
       ...existing,
-      id: existing.id ?? createId("location"),
+      id: existing.id ?? input.id ?? createId("location"),
       name,
       latitude,
       longitude,
@@ -99,7 +99,7 @@ export function normalizeTransmitter(
     error: "",
     transmitter: {
       ...existing,
-      id: existing.id ?? createId("transmitter"),
+      id: existing.id ?? input.id ?? createId("transmitter"),
       locationId,
       name,
       frequency,
