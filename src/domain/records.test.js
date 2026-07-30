@@ -42,6 +42,25 @@ describe("normalizeLocation", () => {
   });
 });
 
+// The location form passes `null` when the record does not exist yet, which a
+// default parameter does not cover — this used to throw before any validation
+// ran, so no new location could be saved at all.
+describe.each([
+  ["normalizeLocation", normalizeLocation, { name: "A", latitude: 44, longitude: 17 }],
+  [
+    "normalizeTransmitter",
+    normalizeTransmitter,
+    { locationId: "location-1", name: "A", frequency: 100 }
+  ]
+])("%s with a null existing record", (_label, normalize, input) => {
+  it("treats null as nothing to merge into", () => {
+    const result = normalize(input, null, now);
+
+    expect(result.error).toBe("");
+    expect(result[Object.keys(result).find((key) => key !== "error")]).toBeTruthy();
+  });
+});
+
 describe("normalizeTransmitter", () => {
   it("normalizes a transmitter and preserves stable metadata", () => {
     const result = normalizeTransmitter(
@@ -69,6 +88,46 @@ describe("normalizeTransmitter", () => {
         updatedAt: now
       }
     });
+  });
+
+  it("keeps a trimmed station class", () => {
+    const result = normalizeTransmitter(
+      {
+        locationId: "location-1",
+        name: "Repeater A",
+        frequency: 145.725,
+        stationClass: "  BC "
+      },
+      {},
+      now
+    );
+
+    expect(result.transmitter.stationClass).toBe("BC");
+  });
+
+  it("carries an existing station class when the input omits it", () => {
+    const result = normalizeTransmitter(
+      { locationId: "location-1", name: "Repeater A", frequency: 145.725 },
+      { id: "transmitter-1", stationClass: "AT" },
+      now
+    );
+
+    expect(result.transmitter.stationClass).toBe("AT");
+  });
+
+  it("drops the station class when the field is cleared", () => {
+    const result = normalizeTransmitter(
+      {
+        locationId: "location-1",
+        name: "Repeater A",
+        frequency: 145.725,
+        stationClass: ""
+      },
+      { id: "transmitter-1", stationClass: "AT" },
+      now
+    );
+
+    expect(result.transmitter).not.toHaveProperty("stationClass");
   });
 
   it.each([

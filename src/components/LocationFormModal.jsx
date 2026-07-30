@@ -63,6 +63,18 @@ function LocationFormModal({
     setError("");
   }
 
+  // A tap on the map already fixed the position, so it is shown rather than
+  // asked for. Every other way in — editing, or adding straight from the list
+  // — has to let the coordinates be typed.
+  const pinnedOnMap =
+    !location &&
+    coordinates?.latitude !== undefined &&
+    coordinates?.latitude !== null &&
+    coordinates?.latitude !== "" &&
+    coordinates?.longitude !== undefined &&
+    coordinates?.longitude !== null &&
+    coordinates?.longitude !== "";
+
   return (
     <IonModal
       isOpen={isOpen}
@@ -99,7 +111,12 @@ function LocationFormModal({
               update("name", event.detail.value)
             }
           />
-          {location ? (
+          {pinnedOnMap ? (
+            <p className="coordinate-note">
+              {Number(form.latitude).toFixed(6)},{" "}
+              {Number(form.longitude).toFixed(6)}
+            </p>
+          ) : (
             <div className="coordinate-fields">
               <IonInput
                 label={t("location.latitude")}
@@ -122,11 +139,6 @@ function LocationFormModal({
                 }
               />
             </div>
-          ) : (
-            <p className="coordinate-note">
-              {Number(form.latitude).toFixed(6)},{" "}
-              {Number(form.longitude).toFixed(6)}
-            </p>
           )}
           {error ? (
             <IonText color="danger">

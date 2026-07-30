@@ -135,6 +135,121 @@ describe("IndexedDB CRUD", () => {
     ).rejects.toThrow("errors.duplicateFrequency");
   });
 
+  it("appends several transmitters to an existing location in one go", async () => {
+    const location = await database.saveLocation({
+      name: "Crno Brdo",
+      latitude: 43.12853,
+      longitude: 17.651833
+    });
+
+    await database.saveTransmitter({
+      locationId: location.id,
+      name: "Existing",
+      frequency: 87.8
+    });
+
+    const saved = await database.addTransmittersToLocation(location.id, [
+      { id: "station-1", name: "Added A", frequency: 101.5, stationClass: "BC" },
+      { id: "station-2", name: "Added B", frequency: 103.1 }
+    ]);
+
+    expect(saved).toHaveLength(2);
+
+    const snapshot = await database.getSnapshot();
+    const stored = snapshot.transmitters.filter(
+      (transmitter) => transmitter.locationId === location.id
+    );
+
+    expect(stored).toHaveLength(3);
+    expect(stored.find((tx) => tx.id === "station-1").stationClass).toBe("BC");
+    expect(stored.find((tx) => tx.id === "station-2")).not.toHaveProperty(
+      "stationClass"
+    );
+  });
+
+  it("writes nothing when one added transmitter repeats a stored frequency", async () => {
+    const location = await database.saveLocation({
+      name: "Crno Brdo",
+      latitude: 43.12853,
+      longitude: 17.651833
+    });
+
+    await database.saveTransmitter({
+      locationId: location.id,
+      name: "Existing",
+      frequency: 87.8
+    });
+
+    await expect(
+      database.addTransmittersToLocation(location.id, [
+        { name: "Fine", frequency: 101.5 },
+        { name: "Clash", frequency: 87.8 }
+      ])
+    ).rejects.toThrow("errors.duplicateFrequency");
+
+    const snapshot = await database.getSnapshot();
+    expect(snapshot.transmitters).toHaveLength(1);
+  });
+
+  it("rejects a batch that repeats a frequency within itself", async () => {
+    const location = await database.saveLocation({
+      name: "Crno Brdo",
+      latitude: 43.12853,
+      longitude: 17.651833
+    });
+
+    await expect(
+      database.addTransmittersToLocation(location.id, [
+        { name: "A", frequency: 101.5 },
+        { name: "B", frequency: 101.5 }
+      ])
+    ).rejects.toThrow("errors.duplicateFrequency");
+
+    expect((await database.getSnapshot()).transmitters).toEqual([]);
+  });
+
+  it("rejects added transmitters for a missing location", async () => {
+    await expect(
+      database.addTransmittersToLocation("missing", [
+        { name: "A", frequency: 101.5 }
+      ])
+    ).rejects.toThrow("errors.locationMissing");
+  });
+
+  it("re-saving the same added transmitters updates them instead of duplicating", async () => {
+    const location = await database.saveLocation({
+      name: "Crno Brdo",
+      latitude: 43.12853,
+      longitude: 17.651833
+    });
+
+    const input = [{ id: "station-1", name: "Added", frequency: 101.5 }];
+
+    await database.addTransmittersToLocation(location.id, input);
+    await database.addTransmittersToLocation(location.id, input);
+
+    expect((await database.getSnapshot()).transmitters).toHaveLength(1);
+  });
+
+  it("stores the originating location on an ad-hoc calculation", async () => {
+    const saved = await database.saveAdhocCalculation({
+      name: "Crno Brdo scenario",
+      stations: [{ id: "s1", name: "Tx 1", frequency: 145.5 }],
+      locationId: "CRNOBRDO-01",
+      locationName: "Crno Brdo"
+    });
+
+    expect(saved.locationId).toBe("CRNOBRDO-01");
+    expect(saved.locationName).toBe("Crno Brdo");
+
+    const manual = await database.saveAdhocCalculation({
+      name: "Manual scenario",
+      stations: []
+    });
+
+    expect(manual).not.toHaveProperty("locationId");
+  });
+
   it("rejects saving a location with duplicate GPS coordinates", async () => {
     await database.saveLocation({
       name: "Site A",
@@ -181,7 +296,115 @@ describe("IndexedDB CRUD", () => {
 
     const snapshot = await database.getSnapshot();
     expect(snapshot.locations).toHaveLength(2); // Still 2 locations!
-    expect(snapshot.transmitters).toHaveLength(4); // 88.1 dup was skipped, 101.1 added!
+    // 101.1 added; 88.1 matched the stored record and updated it in place.
+    expect(snapshot.transmitters).toHaveLength(4);
+
+    const sljeme = snapshot.locations.find(
+      (location) => location.latitude === 45.9002
+    );
+    expect(sljeme.name).toBe("Sljeme Alt Name");
+    expect(sljeme.id).toBe("loc-1");
+
+    const onEightyEight = snapshot.transmitters.find(
+      (transmitter) => transmitter.frequency === 88.1
+    );
+    expect(onEightyEight.name).toBe("Sljeme FM1 Dup");
+    expect(onEightyEight.id).toBe("tx-1");
+  });
+
+  it("adopts the incoming name for a site a few metres from a stored one", async () => {
+    const stored = await database.saveLocation({
+      name: "Fortica (stara oznaka)",
+      latitude: 43.353806,
+      longitude: 17.831889
+    });
+
+    await database.saveTransmitter({
+      locationId: stored.id,
+      name: "Postojeći odašiljač",
+      frequency: 100.1
+    });
+
+    // ~8 m north of the stored position, spelled differently.
+    await database.importGeoData({
+      locations: [
+        {
+          id: "FORTICA-01",
+          name: "Fortica",
+          latitude: 43.353806 + 8 / 111320,
+          longitude: 17.831889
+        }
+      ],
+      transmitters: [
+        {
+          id: "FORTICA-01::100.1",
+          locationId: "FORTICA-01",
+          name: "  hrt   fortica  ",
+          frequency: 100.1,
+          stationClass: "BC"
+        },
+        {
+          id: "FORTICA-01::104.3",
+          locationId: "FORTICA-01",
+          name: "Novi odašiljač",
+          frequency: 104.3
+        }
+      ]
+    });
+
+    const snapshot = await database.getSnapshot();
+
+    // One site, renamed, still at the stored coordinates.
+    expect(snapshot.locations).toHaveLength(1);
+    expect(snapshot.locations[0].id).toBe(stored.id);
+    expect(snapshot.locations[0].name).toBe("Fortica");
+    expect(snapshot.locations[0].latitude).toBe(43.353806);
+
+    // The shared frequency was updated, the new one appended.
+    expect(snapshot.transmitters).toHaveLength(2);
+
+    const updated = snapshot.transmitters.find(
+      (transmitter) => transmitter.frequency === 100.1
+    );
+    expect(updated.name).toBe("hrt   fortica");
+    expect(updated.stationClass).toBe("BC");
+    expect(updated.locationId).toBe(stored.id);
+
+    const added = snapshot.transmitters.find(
+      (transmitter) => transmitter.frequency === 104.3
+    );
+    expect(added.name).toBe("Novi odašiljač");
+    expect(added.locationId).toBe(stored.id);
+  });
+
+  it("does not merge a site beyond the match radius", async () => {
+    await database.saveLocation({
+      name: "Fortica",
+      latitude: 43.353806,
+      longitude: 17.831889
+    });
+
+    // ~30 m north: a different site.
+    await database.importGeoData({
+      locations: [
+        {
+          id: "OTHER-01",
+          name: "Druga lokacija",
+          latitude: 43.353806 + 30 / 111320,
+          longitude: 17.831889
+        }
+      ],
+      transmitters: [
+        {
+          id: "OTHER-01::100.1",
+          locationId: "OTHER-01",
+          name: "Odašiljač",
+          frequency: 100.1
+        }
+      ]
+    });
+
+    expect((await database.getSnapshot()).locations).toHaveLength(2);
   });
 
   it("creates, updates, and deletes an ad-hoc calculation", async () => {

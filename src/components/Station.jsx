@@ -1,5 +1,6 @@
 import {
   IonButton,
+  IonCheckbox,
   IonIcon,
   IonItem,
   IonLabel,
@@ -8,11 +9,30 @@ import {
 import { trashOutline } from "ionicons/icons";
 import { useI18n } from "../i18n/I18nProvider";
 
-function Station({ station, label, onDelete }) {
+function Station({ station, label, onDelete, selected, onToggle }) {
   const { t } = useI18n();
+  const isExcluded = Boolean(onToggle) && !selected;
+
   return (
-    <IonItem>
-      <IonLabel>{label}</IonLabel>
+    <IonItem className={isExcluded ? "station-item station-item--excluded" : "station-item"}>
+      {onToggle ? (
+        <IonCheckbox
+          slot="start"
+          checked={Boolean(selected)}
+          onIonChange={() => onToggle(station.id)}
+          aria-label={t("station.includeAria", { name: label })}
+        />
+      ) : null}
+      <IonLabel className="ion-text-wrap">
+        <h3>{label}</h3>
+        {station.stationClass ? (
+          <p>
+            {t("transmitter.stationClassTag", {
+              stationClass: station.stationClass
+            })}
+          </p>
+        ) : null}
+      </IonLabel>
       <IonNote slot="end" className="station-frequency">
         {station.frequency}
       </IonNote>

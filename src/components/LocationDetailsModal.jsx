@@ -28,7 +28,8 @@ import {
 
 const emptyTransmitter = {
   name: "",
-  frequency: ""
+  frequency: "",
+  stationClass: ""
 };
 
 function LocationDetailsModal({
@@ -65,7 +66,8 @@ function LocationDetailsModal({
       transmitter
         ? {
             name: transmitter.name,
-            frequency: transmitter.frequency
+            frequency: transmitter.frequency,
+            stationClass: transmitter.stationClass ?? ""
           }
         : emptyTransmitter
     );
@@ -207,6 +209,18 @@ function LocationDetailsModal({
                   }))
                 }
               />
+              <IonInput
+                label={t("transmitter.stationClass")}
+                labelPlacement="stacked"
+                placeholder={t("transmitter.stationClassHint")}
+                value={form.stationClass}
+                onIonInput={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    stationClass: event.detail.value ?? ""
+                  }))
+                }
+              />
               {error ? (
                 <IonText color="danger">
                   <p>{error}</p>
@@ -249,7 +263,16 @@ function LocationDetailsModal({
                 <IonList>
                   {transmitters.map((transmitter) => (
                     <IonItem key={transmitter.id}>
-                      <IonLabel>{transmitter.name}</IonLabel>
+                      <IonLabel className="ion-text-wrap">
+                        <h2>{transmitter.name}</h2>
+                        {transmitter.stationClass ? (
+                          <p>
+                            {t("transmitter.stationClassTag", {
+                              stationClass: transmitter.stationClass
+                            })}
+                          </p>
+                        ) : null}
+                      </IonLabel>
                       <IonNote slot="end">
                         {transmitter.frequency}
                       </IonNote>

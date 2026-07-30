@@ -79,15 +79,19 @@ third coordinate is read as elevation and ignored.
 
 ### Optional fields
 
-These are validated only if present and are **not persisted** — the database
-stores just the location and transmitter fields above. They exist so regulator
-exports survive a round trip without being stripped:
+| Field | Type | Rule |
+| --- | --- | --- |
+| `transmitters[].stationClass` | string | Optional, may be empty; must be text when present |
 
-`organization`, `serviceType`, `stationClass`
+`stationClass` **is persisted** with the transmitter and shown in the location
+card, where it can also be edited. It is expected to carry ITU station-class
+symbols (`BC` sound broadcasting, `BT` television broadcasting, `AT` amateur),
+but the value is not checked against a controlled list. A transmitter without
+one is imported normally — the key is simply omitted.
 
-`stationClass` is expected to carry ITU station-class symbols (`BC` sound
-broadcasting, `BT` television broadcasting, `AT` amateur), but the value is not
-checked against a controlled list.
+`organization` and `serviceType` are validated as unknown properties (that is,
+accepted) but **not persisted**. They exist so regulator exports survive a round
+trip without being rejected.
 
 Any other unknown property is **ignored, not rejected**.
 
@@ -121,9 +125,37 @@ Record IDs are derived from the file, not generated randomly:
 Importing the same file twice therefore **updates** the existing rows instead of
 appending duplicates. Keep `siteId` stable across exports for this to hold.
 
-Merging against existing data still matches locations by coordinate proximity
-first (within 0.0001°), so a site already saved manually is reused rather than
-duplicated.
+### Matching against data you already have
+
+IDs are only the fallback. Because two sources describing the same mast rarely
+spell things the same way, identity comes from the data itself:
+
+| Incoming | Matched against | Result |
+| --- | --- | --- |
+| Site | A stored site within **10 m** | Same site: keeps its stored ID and coordinates, **takes the incoming name** |
+| Site | Nothing within 10 m | Added as a new location |
+| Transmitter | A stored transmitter on the **same frequency at that site** | Same transmitter: keeps its stored ID and `createdAt`, **takes the incoming name** and station class |
+| Transmitter | No stored transmitter on that frequency | Added to the site |
+
+So a location is identified by **where it is**, and a transmitter by **what
+frequency it runs at there**. The name is treated as a mutable attribute that
+the incoming file refreshes, which is what resolves typos, spacing, casing and
+one-sided renames — no fuzzy name matching is involved or needed.
+
+Two consequences worth planning for:
+
+- A site is never duplicated by a slightly different coordinate, and a frequency
+  is never listed twice at one site.
+- **Changing a frequency creates a different transmitter.** Correcting 87.8 to
+  88.0 locally and then importing a file that still says 87.8 leaves both, since
+  they are two different frequencies at that site. Frequency corrections belong
+  in the source that produces the file.
+
+The radius is `SITE_MATCH_RADIUS_METRES` in `src/domain/geoMatch.js`, measured
+as a true distance rather than a degree box — a degree box is wider
+north-south than east-west, and widens further towards the poles. The same rule
+rejects a manually created location that lands on top of an existing one
+(`errors.duplicateLocation`).
 
 ---
 

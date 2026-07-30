@@ -155,6 +155,13 @@ export function validateBackup(candidate) {
     ) {
       errors.push(`${prefix} frequency must be a non-negative number.`);
     }
+
+    if (
+      transmitter.stationClass !== undefined &&
+      typeof transmitter.stationClass !== "string"
+    ) {
+      errors.push(`${prefix} stationClass must be a string when present.`);
+    }
   });
 
   return {

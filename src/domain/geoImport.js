@@ -1,5 +1,10 @@
 /**
- * TOIC transmitter import format.
+ * The transmitter import format.
+ *
+ * The `toic` profile name predates the application's current name and is kept
+ * deliberately: it is a file-format identifier that already exists in exported
+ * files in the wild, so renaming it would reject data users already hold. The
+ * product name and the format name are allowed to differ.
  *
  * The container is standard GeoJSON (RFC 7946). The `toic` foreign member
  * (permitted by RFC 7946 section 6.1) declares the property profile, so the
@@ -12,9 +17,9 @@
  *   - `properties.transmitters[]` with `name` and `frequencyMhz`
  *
  * Unknown properties are ignored, not rejected, so exports may carry extra
- * regulator metadata (organization, stationClass, serviceType) without
- * breaking. Those extras are not persisted; the database stores only the
- * location and transmitter fields.
+ * regulator metadata (organization, serviceType) without breaking. Those
+ * extras are not persisted. `stationClass` is the exception: it is kept and
+ * stored with the transmitter, and may be absent or empty.
  */
 
 export const IMPORT_PROFILE = "toic-sites";
@@ -48,6 +53,16 @@ function validateTransmitter(transmitter, errors, prefix, seenFrequencies) {
 
   if (!isNonEmptyString(transmitter.name)) {
     errors.push(`${prefix} must have a non-empty name.`);
+  }
+
+  // stationClass is optional and may be empty, but must be text when given —
+  // it is the one regulator field that gets persisted.
+  if (
+    transmitter.stationClass !== undefined &&
+    transmitter.stationClass !== null &&
+    typeof transmitter.stationClass !== "string"
+  ) {
+    errors.push(`${prefix} stationClass must be a string when present.`);
   }
 
   const frequency = transmitter.frequencyMhz;
@@ -237,12 +252,20 @@ export function geoImportToRecords(candidate) {
     });
 
     feature.properties.transmitters.forEach((transmitter) => {
-      transmitters.push({
+      const record = {
         id: `${siteId}::${transmitter.frequencyMhz}`,
         locationId: siteId,
         name: transmitter.name.trim(),
         frequency: transmitter.frequencyMhz
-      });
+      };
+
+      const stationClass = String(transmitter.stationClass ?? "").trim();
+
+      if (stationClass) {
+        record.stationClass = stationClass;
+      }
+
+      transmitters.push(record);
     });
   });
 

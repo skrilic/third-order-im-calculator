@@ -17,6 +17,7 @@ import "leaflet/dist/leaflet.css";
 import "./theme/app.css";
 
 import App from "./App";
+import { seedDatabaseIfEmpty } from "./data/seed";
 import {
   applyThemePreference,
   readThemePreference
@@ -34,6 +35,19 @@ ModuleRegistry.registerModules([
   ClientSideRowModelModule,
   TextFilterModule
 ]);
+
+// Seeding runs before the first render so the map and the location list show
+// the starter sites immediately instead of appearing after a refresh. It never
+// throws, and an unusable database is reported by the screens themselves.
+const seedResult = await seedDatabaseIfEmpty();
+
+if (seedResult.seeded) {
+  console.info(
+    `Intermod: seeded ${seedResult.counts.locations} starter locations.`
+  );
+} else if (seedResult.error || seedResult.errors) {
+  console.warn("Intermod: starter data not seeded —", seedResult.reason);
+}
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -476,6 +476,50 @@ ion-button:active {
   font-variant-numeric: tabular-nums;
 }
 
+.location-add-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 4px 16px 0;
+}
+
+.location-add-hint {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium-shade);
+}
+
+.station-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.station-list-heading ion-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+/* A station left out of the calculation stays readable but visibly inactive. */
+.station-item--excluded ion-label {
+  opacity: 0.45;
+}
+
+.station-item--excluded .station-frequency {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.calculation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
 .results-heading {
   display: flex;
   align-items: center;

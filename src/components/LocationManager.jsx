@@ -179,6 +179,24 @@ function LocationManager({ onCalculate }) {
 
       {/* Saved Locations List Section */}
       <div className="dashboard-list-section">
+        {/* Tapping the map is the quickest way in, but it is invisible until
+            someone tries it, so the same action is offered as a button. Empty
+            coordinates open the form with editable latitude and longitude. */}
+        <div className="location-add-row">
+          <IonButton
+            size="small"
+            onClick={() =>
+              setNewCoordinates({ latitude: "", longitude: "" })
+            }
+          >
+            <IonIcon slot="start" icon={addOutline} />
+            {t("locations.addNew")}
+          </IonButton>
+          <span className="location-add-hint">
+            {t("locations.addNewHint")}
+          </span>
+        </div>
+
         <IonList inset={true} className="dashboard-locations-list">
           <IonListHeader>
             <IonLabel>{t("locations.cardTitle")}</IonLabel>

@@ -8,11 +8,18 @@ function createId(prefix) {
     .slice(2)}`;
 }
 
+// A default parameter only covers `undefined`, and the form passes `null` for
+// a record that does not exist yet. Both mean "nothing to merge into".
+function baseRecord(existing) {
+  return existing ?? {};
+}
+
 export function normalizeLocation(
   input,
-  existing = {},
+  existingRecord = {},
   now = new Date().toISOString()
 ) {
+  const existing = baseRecord(existingRecord);
   const name = String(input.name ?? "").trim();
   const rawLatitude = String(input.latitude ?? "").trim();
   const rawLongitude = String(input.longitude ?? "").trim();
@@ -63,9 +70,10 @@ export function normalizeLocation(
 
 export function normalizeTransmitter(
   input,
-  existing = {},
+  existingRecord = {},
   now = new Date().toISOString()
 ) {
+  const existing = baseRecord(existingRecord);
   const name = String(input.name ?? "").trim();
   const locationId = String(
     input.locationId ?? existing.locationId ?? ""
@@ -95,16 +103,30 @@ export function normalizeTransmitter(
     };
   }
 
+  // Optional ITU station class (BC, BT, AT…). It is stored only when it has a
+  // value, so a cleared field removes the key instead of leaving an empty one.
+  const stationClass = String(
+    input.stationClass ?? existing.stationClass ?? ""
+  ).trim();
+
+  const transmitter = {
+    ...existing,
+    id: existing.id ?? input.id ?? createId("transmitter"),
+    locationId,
+    name,
+    frequency,
+    createdAt: existing.createdAt ?? now,
+    updatedAt: now
+  };
+
+  if (stationClass) {
+    transmitter.stationClass = stationClass;
+  } else {
+    delete transmitter.stationClass;
+  }
+
   return {
     error: "",
-    transmitter: {
-      ...existing,
-      id: existing.id ?? input.id ?? createId("transmitter"),
-      locationId,
-      name,
-      frequency,
-      createdAt: existing.createdAt ?? now,
-      updatedAt: now
-    }
+    transmitter
   };
 }

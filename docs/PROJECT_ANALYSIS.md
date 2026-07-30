@@ -23,6 +23,7 @@ index.html
     └── src/main.jsx
         ├── setupIonicReact()
         ├── register minimal AG Grid modules
+        ├── seedDatabaseIfEmpty() — starter sites on a first run only
         └── App
             ├── I18nProvider
             ├── hashRouter
@@ -78,6 +79,7 @@ transmitter = {
   locationId: string,
   name: string,
   frequency: number,
+  stationClass?: string,
   createdAt: string,
   updatedAt: string
 }
@@ -95,7 +97,7 @@ distinctness is based on array indices rather than JavaScript object identity.
 
 | File | Responsibility |
 | --- | --- |
-| `src/main.jsx` | Initializes Ionic, registers required AG Grid modules, and renders React. |
+| `src/main.jsx` | Initializes Ionic, registers required AG Grid modules, seeds a first-run database, and renders React. |
 | `src/App.jsx` | Provides the `IonApp` root. |
 | `src/components/Calculation.jsx` | Edits the app-owned manual station list and composes the calculation route. |
 | `src/components/AppHeader.jsx` | Renders the compact Ionic toolbar and upper-right theme action. |
@@ -114,17 +116,21 @@ distinctness is based on array indices rather than JavaScript object identity.
 | `src/components/LocationDetailsModal.jsx` | Lists location transmitters and provides location/transmitter CRUD. |
 | `src/components/BackupManager.jsx` | Previews, exports, merges, and replaces versioned JSON backups. |
 | `src/components/AddStation.jsx` | Collects station input and delegates normalization to the domain layer. |
-| `src/components/StationList.jsx` | Renders the current Ionic station list. |
-| `src/components/Station.jsx` | Renders one station with an accessible delete button. |
+| `src/components/StationList.jsx` | Renders the current Ionic station list, with optional per-station selection. |
+| `src/components/Station.jsx` | Renders one station with an accessible include checkbox and delete button. |
 | `src/components/ExportCSV.jsx` | Downloads domain-serialized CSV without a third-party CSV package. |
 | `src/domain/calculateIm3.js` | Contains pure formula, labeling, filtering, and rounding logic. |
-| `src/domain/normalizeStation.js` | Validates and normalizes station form values. |
+| `src/domain/normalizeStation.js` | Validates and normalizes station form values; requires a name when the station can be persisted. |
+| `src/domain/calculationList.js` | Builds the working station list: stored transmitters, session additions, and inclusion filtering. |
 | `src/domain/createCsv.js` | Escapes and serializes result rows as spreadsheet-compatible CSV. |
 | `src/domain/records.js` | Validates and normalizes persisted location/transmitter records. |
 | `src/domain/backup.js` | Defines backup schema validation, parsing, conflict analysis, and merge rules. |
-| `src/data/database.js` | Implements IndexedDB CRUD, cascade deletion, snapshots, and atomic writes. |
+| `src/domain/geoMatch.js` | Decides when two coordinate pairs mean the same site, by metric distance. |
+| `src/data/database.js` | Implements IndexedDB CRUD, cascade deletion, snapshots, inspection, and atomic writes. |
+| `src/data/seed.js` | Imports the shipped starter sites once, only into a database with no records at all. |
+| `src/data/seedSites.js` | Generated starter data, built from `data_raw/seed_sites.geojson` by `npm run build:seed`. |
 | `src/theme/themePreference.js` | Resolves, stores, and applies Ionic and AG Grid theme modes. |
-| `src/**/*.test.js` | Contains 80 unit, route, theme, i18n, geolocation, and IndexedDB adapter tests across ten modules. |
+| `src/**/*.test.js` | Contains 181 unit, route, theme, i18n, geolocation, seeding, site-matching, and IndexedDB adapter tests across fifteen modules. |
 
 ## Calculation behavior
 

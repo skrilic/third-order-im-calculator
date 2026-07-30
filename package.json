@@ -28,7 +28,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "convert:export": "node scripts/convert-regulator-export.mjs"
+    "convert:export": "node scripts/convert-regulator-export.mjs",
+    "build:seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-seed-data.mjs"
   },
   "engines": {
     "node": ">=22.12.0"

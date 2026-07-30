@@ -267,6 +267,38 @@ describe("validateGeoImport", () => {
     expect(validateGeoImport(document).ok).toBe(true);
   });
 
+  it("rejects a non-string stationClass", () => {
+    const document = createDocument([
+      createFeature({
+        properties: {
+          transmitters: [
+            { name: "Tx", frequencyMhz: 87.8, stationClass: 12 }
+          ]
+        }
+      })
+    ]);
+
+    const result = validateGeoImport(document);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toContain("stationClass");
+  });
+
+  it("accepts a missing or empty stationClass", () => {
+    const document = createDocument([
+      createFeature({
+        properties: {
+          transmitters: [
+            { name: "Tx A", frequencyMhz: 87.8, stationClass: "" },
+            { name: "Tx B", frequencyMhz: 91.3 }
+          ]
+        }
+      })
+    ]);
+
+    expect(validateGeoImport(document).ok).toBe(true);
+  });
+
   it("reports every problem in the file, not just the first", () => {
     const document = createDocument([
       createFeature({ properties: { siteId: "", name: "" } }),
@@ -322,6 +354,26 @@ describe("geoImportToRecords", () => {
         frequency: 105.5
       }
     ]);
+  });
+
+  it("persists stationClass and omits the key when it is absent or blank", () => {
+    const document = createDocument([
+      createFeature({
+        properties: {
+          transmitters: [
+            { name: "Broadcast", frequencyMhz: 87.8, stationClass: " BC " },
+            { name: "Blank", frequencyMhz: 91.3, stationClass: "  " },
+            { name: "Missing", frequencyMhz: 105.5 }
+          ]
+        }
+      })
+    ]);
+
+    const records = geoImportToRecords(document);
+
+    expect(records.transmitters[0].stationClass).toBe("BC");
+    expect(records.transmitters[1]).not.toHaveProperty("stationClass");
+    expect(records.transmitters[2]).not.toHaveProperty("stationClass");
   });
 
   it("reads coordinates as [longitude, latitude]", () => {

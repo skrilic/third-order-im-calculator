@@ -6241,9 +6241,9 @@
     },
     {
         "frequency": 671.25,
-        "latitude": 17.226056,
+        "latitude": 44.736583,
         "location": "PONIR-01",
-        "longitude": 44.736583,
+        "longitude": 17.226056,
         "organization_name": "TV Simic",
         "service_type": "-----------",
         "station_class": "BT",
@@ -12961,9 +12961,9 @@
     },
     {
         "frequency": 145.6,
-        "latitude": 17.226056,
+        "latitude": 44.736583,
         "location": "PONIR-01",
-        "longitude": 44.736583,
+        "longitude": 17.226056,
         "organization_name": "SRRS-Radio klub Nikola Tesla BL",
         "service_type": "-----------",
         "station_class": "AT",

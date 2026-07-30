@@ -1,4 +1,5 @@
 import { mergeSnapshots, validateBackup } from "../domain/backup";
+import { findSiteWithin } from "../domain/geoMatch";
 import {
   normalizeLocation,
   normalizeTransmitter
@@ -9,6 +10,7 @@ const DATABASE_VERSION = 3;
 const LOCATION_STORE = "locations";
 const TRANSMITTER_STORE = "transmitters";
 const ADHOC_STORE = "adhocCalculations";
+const FREQUENCY_EPSILON = 0.00001;
 
 let indexedDbPromise;
 
@@ -118,6 +120,38 @@ export async function getSnapshot() {
   };
 }
 
+/**
+ * Reports whether the application's database and its stores are in place and
+ * whether they hold anything yet.
+ *
+ * Opening the database creates any missing store through the upgrade handler,
+ * so `missingStores` is a diagnostic rather than an expected state. `isEmpty`
+ * is what first-run seeding keys off: it is true only when every store is
+ * empty, so existing data is never overwritten.
+ */
+export async function inspectDatabase() {
+  const database = await openDatabase();
+  const missingStores = [LOCATION_STORE, TRANSMITTER_STORE, ADHOC_STORE].filter(
+    (store) => !database.objectStoreNames.contains(store)
+  );
+
+  const snapshot = await getSnapshot();
+  const counts = {
+    locations: (snapshot.locations || []).length,
+    transmitters: (snapshot.transmitters || []).length,
+    adhocCalculations: (snapshot.adhocCalculations || []).length
+  };
+
+  return {
+    missingStores,
+    counts,
+    isEmpty:
+      counts.locations === 0 &&
+      counts.transmitters === 0 &&
+      counts.adhocCalculations === 0
+  };
+}
+
 export async function saveLocation(input, existing) {
   const normalized = normalizeLocation(input, existing);
 
@@ -126,11 +160,11 @@ export async function saveLocation(input, existing) {
   }
 
   const currentSnapshot = await getSnapshot();
-  const duplicateLoc = (currentSnapshot.locations || []).find(
-    (loc) =>
-      loc.id !== normalized.location.id &&
-      Math.abs(loc.latitude - normalized.location.latitude) < 0.0001 &&
-      Math.abs(loc.longitude - normalized.location.longitude) < 0.0001
+  const duplicateLoc = findSiteWithin(
+    (currentSnapshot.locations || []).filter(
+      (loc) => loc.id !== normalized.location.id
+    ),
+    normalized.location
   );
 
   if (duplicateLoc) {
@@ -169,6 +203,23 @@ export async function deleteLocation(locationId) {
   await transactionComplete(transaction);
 }
 
+/**
+ * Merges an import into the stored catalog.
+ *
+ * Identity comes from the data, not from the names, because two sources
+ * describing the same site rarely spell things the same way:
+ *
+ * - a **location** is identified by its position. A site within
+ *   `SITE_MATCH_RADIUS_METRES` of a stored one is that stored site: it keeps
+ *   its ID and coordinates, so its transmitters stay attached, and takes the
+ *   incoming name as the more recent spelling.
+ * - a **transmitter** is identified by its frequency at that location. A
+ *   matching frequency updates the stored record's name and station class
+ *   instead of being dropped or added a second time; a new frequency is added.
+ *
+ * The import therefore never duplicates a site or a frequency, and typos,
+ * casing, spacing and renames in either source resolve to the incoming name.
+ */
 export async function importGeoData(geoData) {
   const current = await getSnapshot();
 
@@ -182,14 +233,19 @@ export async function importGeoData(geoData) {
     }
     const incomingLoc = norm.location;
 
-    // Check if a location with matching GPS coordinates already exists
-    const existingGpsLoc = [...locationsMap.values()].find(
-      (l) =>
-        Math.abs(l.latitude - incomingLoc.latitude) < 0.0001 &&
-        Math.abs(l.longitude - incomingLoc.longitude) < 0.0001
+    const existingGpsLoc = findSiteWithin(
+      [...locationsMap.values()],
+      incomingLoc
     );
 
     if (existingGpsLoc) {
+      // The same mast under a different name: adopt the name, keep the stored
+      // identity and position.
+      locationsMap.set(existingGpsLoc.id, {
+        ...existingGpsLoc,
+        name: incomingLoc.name,
+        updatedAt: incomingLoc.updatedAt
+      });
       locIdMap.set(locInput.id, existingGpsLoc.id);
       if (incomingLoc.id) {
         locIdMap.set(incomingLoc.id, existingGpsLoc.id);
@@ -209,28 +265,38 @@ export async function importGeoData(geoData) {
   const transmittersMap = new Map((current.transmitters || []).map((t) => [t.id, t]));
 
   for (const txInput of geoData.transmitters || []) {
-    const targetLocationId = locIdMap.get(txInput.locationId) || txInput.locationId;
-    const norm = normalizeTransmitter({ ...txInput, locationId: targetLocationId });
-    if (norm.error || !norm.transmitter) {
-      continue;
-    }
-    const tx = norm.transmitter;
+    const targetLocationId =
+      locIdMap.get(txInput.locationId) || txInput.locationId;
 
-    const locExists = mergedLocations.some((l) => l.id === tx.locationId);
+    const locExists = mergedLocations.some((l) => l.id === targetLocationId);
     if (!locExists) {
       continue;
     }
 
-    const isDup = [...transmittersMap.values()].some(
-      (existing) =>
-        existing.locationId === tx.locationId &&
-        existing.id !== tx.id &&
-        Math.abs(existing.frequency - tx.frequency) < 0.00001
+    // The frequency is the natural key at a location, so an existing record on
+    // that frequency is the one being described — whatever either side calls
+    // it. Passing it as `existing` keeps its ID and createdAt while the
+    // incoming name and station class overwrite the stored ones.
+    const incomingFrequency = Number(txInput.frequency);
+    const existingOnFrequency = Number.isFinite(incomingFrequency)
+      ? [...transmittersMap.values()].find(
+          (candidate) =>
+            candidate.locationId === targetLocationId &&
+            Math.abs(candidate.frequency - incomingFrequency) <
+              FREQUENCY_EPSILON
+        )
+      : undefined;
+
+    const norm = normalizeTransmitter(
+      { ...txInput, locationId: targetLocationId },
+      existingOnFrequency ?? {}
     );
 
-    if (!isDup) {
-      transmittersMap.set(tx.id, tx);
+    if (norm.error || !norm.transmitter) {
+      continue;
     }
+
+    transmittersMap.set(norm.transmitter.id, norm.transmitter);
   }
 
   const mergedTransmitters = [...transmittersMap.values()];
@@ -319,7 +385,8 @@ export async function saveTransmitter(input, existing) {
           (tx) =>
             tx.locationId === normalized.transmitter.locationId &&
             tx.id !== normalized.transmitter.id &&
-            Math.abs(tx.frequency - normalized.transmitter.frequency) < 0.00001
+            Math.abs(tx.frequency - normalized.transmitter.frequency) <
+              FREQUENCY_EPSILON
         );
 
         if (isDuplicate) {
@@ -332,6 +399,122 @@ export async function saveTransmitter(input, existing) {
         }
 
         transmitterStore.put(normalized.transmitter);
+      };
+    };
+  });
+}
+
+/**
+ * Appends several transmitters to an existing location in one transaction.
+ *
+ * Used when a calculation that was extended with ad-hoc transmitters is written
+ * back to its location. It is all-or-nothing: if any entry is invalid or
+ * repeats a frequency — either one already stored at the location or another
+ * one in the same batch — nothing is written.
+ */
+export async function addTransmittersToLocation(locationId, inputs) {
+  const pending = [];
+
+  for (const input of inputs || []) {
+    const normalized = normalizeTransmitter({ ...input, locationId });
+
+    if (normalized.error) {
+      throw new Error(normalized.error);
+    }
+
+    const repeatsBatch = pending.some(
+      (candidate) =>
+        Math.abs(candidate.frequency - normalized.transmitter.frequency) <
+        FREQUENCY_EPSILON
+    );
+
+    if (repeatsBatch) {
+      throw new Error("errors.duplicateFrequency");
+    }
+
+    pending.push(normalized.transmitter);
+  }
+
+  if (pending.length === 0) {
+    return [];
+  }
+
+  const database = await openDatabase();
+
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(
+      [LOCATION_STORE, TRANSMITTER_STORE],
+      "readwrite"
+    );
+
+    let isSettled = false;
+
+    function fail(error) {
+      if (isSettled) {
+        return;
+      }
+      isSettled = true;
+      transaction.abort();
+      reject(error);
+    }
+
+    transaction.onerror = () => {
+      if (!isSettled) {
+        isSettled = true;
+        reject(transaction.error ?? new Error("errors.databaseAborted"));
+      }
+    };
+    transaction.onabort = () => {
+      if (!isSettled) {
+        isSettled = true;
+        reject(transaction.error ?? new Error("errors.databaseAborted"));
+      }
+    };
+    transaction.oncomplete = () => {
+      if (!isSettled) {
+        isSettled = true;
+        resolve(pending);
+      }
+    };
+
+    const transmitterStore = transaction.objectStore(TRANSMITTER_STORE);
+    const locationRequest = transaction
+      .objectStore(LOCATION_STORE)
+      .get(locationId);
+
+    locationRequest.onerror = () =>
+      fail(locationRequest.error ?? new Error("errors.databaseAborted"));
+
+    locationRequest.onsuccess = () => {
+      if (!locationRequest.result) {
+        fail(new Error("errors.locationMissing"));
+        return;
+      }
+
+      const existingRequest = transmitterStore.getAll();
+
+      existingRequest.onerror = () =>
+        fail(existingRequest.error ?? new Error("errors.databaseAborted"));
+
+      existingRequest.onsuccess = () => {
+        const stored = existingRequest.result || [];
+
+        const collides = pending.some((transmitter) =>
+          stored.some(
+            (existing) =>
+              existing.locationId === locationId &&
+              existing.id !== transmitter.id &&
+              Math.abs(existing.frequency - transmitter.frequency) <
+                FREQUENCY_EPSILON
+          )
+        );
+
+        if (collides) {
+          fail(new Error("errors.duplicateFrequency"));
+          return;
+        }
+
+        pending.forEach((transmitter) => transmitterStore.put(transmitter));
       };
     };
   });
@@ -370,6 +553,23 @@ export async function saveAdhocCalculation(input, existing = null) {
     createdAt: existing?.createdAt || input?.createdAt || now,
     updatedAt: now
   };
+
+  // A calculation started from a location keeps a note of where it came from;
+  // a purely manual one carries neither key.
+  const locationId = String(
+    input?.locationId ?? existing?.locationId ?? ""
+  ).trim();
+  const locationName = String(
+    input?.locationName ?? existing?.locationName ?? ""
+  ).trim();
+
+  if (locationId) {
+    adhoc.locationId = locationId;
+  }
+
+  if (locationName) {
+    adhoc.locationName = locationName;
+  }
 
   const database = await openDatabase();
   const transaction = database.transaction(ADHOC_STORE, "readwrite");

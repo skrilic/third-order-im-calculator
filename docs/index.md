@@ -24,13 +24,22 @@ equal to or below zero are omitted and output is rounded to two decimal places.
 
 ## Using the calculator
 
+### Starter data
+
+A fresh install seeds three sites — **FORTICA-01**, **GRDONJ-01** and
+**SIBOVI-01** — so the map is not empty on first launch. Seeding happens only when the database holds nothing at all; existing
+locations, transmitters and saved calculations are never overwritten, and the
+starter sites do not come back once deleted. See
+[DATA_MANAGEMENT.md](DATA_MANAGEMENT.md#first-run-seeding).
+
 ### Saved locations
 
 1. Click an empty point on the OpenStreetMap map.
 2. Enter the location name and select **Save**.
 3. The new marker opens the location dialog.
-4. Select **Add**, enter a transmitter name and non-negative frequency, then
-   save it. Repeat for every transmitter at that site.
+4. Select **Add**, enter a transmitter name, a non-negative frequency and an
+   optional station class, then save it. Repeat for every transmitter at that
+   site.
 5. Select **Calculate** in the marker dialog.
 6. The location result page loads every transmitter stored at that location
    and calculates its products.
@@ -39,8 +48,33 @@ equal to or below zero are omitted and output is rounded to two decimal places.
 
 Clicking an existing marker opens its current transmitter list. From that
 dialog, a transmitter can be added, edited, or deleted, and the location name
-or coordinates can be edited. Deleting a location displays a warning because
-all of its transmitters are deleted in the same operation.
+or coordinates can be edited. Each transmitter shows its station class when one
+is stored. Deleting a location displays a warning because all of its
+transmitters are deleted in the same operation.
+
+### Adjusting a location calculation
+
+The location result page is a working list, not a fixed one:
+
+- Every transmitter has a checkbox. Clearing it leaves that transmitter out of
+  the calculation without touching the database; **Select all** and **Clear
+  selection** switch the whole list at once.
+- The form at the top adds an extra transmitter — name, frequency and optional
+  station class — for what-if calculations. The name is **required** here,
+  unlike on the manual **Calculate** tab, because anything added on this page
+  can be written to the location. Added rows can be removed again; stored
+  transmitters cannot be deleted from this page.
+- **Save Calculation** stores the currently included stations in the
+  `adhocCalculations` store, together with the location they came from. They
+  then appear under **Saved Presets** on the **Calculate** tab.
+- **Save to Location** writes the added transmitters into the `transmitters`
+  store alongside the ones already stored at that location. Every transmitter
+  being saved must have a name; a nameless one blocks the save with a message
+  naming its frequency. The write is otherwise all-or-nothing: if any addition
+  repeats a frequency already present at the location, or repeats another one in
+  the same batch, nothing is saved and the page reports
+  `errors.duplicateFrequency`. Because added rows keep their IDs, saving the
+  same list twice updates those rows instead of duplicating them.
 
 Select **Center on my location** to ask for foreground location permission and
 move the map to the current device position. The blue position marker and its

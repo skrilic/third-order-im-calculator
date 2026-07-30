@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   frequencyError,
+  nameError,
   normalizeStation
 } from "./normalizeStation";
 
@@ -51,6 +52,38 @@ describe("normalizeStation", () => {
       error: frequencyError,
       station: null
     });
+  });
+
+  it.each([
+    ["an empty name", ""],
+    ["a whitespace-only name", "   "],
+    ["a missing name", undefined]
+  ])("rejects %s when a name is required", (_label, name) => {
+    expect(
+      normalizeStation({ name, frequency: "100.25" }, { requireName: true })
+    ).toEqual({
+      error: nameError,
+      station: null
+    });
+  });
+
+  it("accepts a named station when a name is required", () => {
+    expect(
+      normalizeStation(
+        { name: "  Tx  ", frequency: "100.25" },
+        { requireName: true }
+      )
+    ).toEqual({
+      error: "",
+      station: { name: "Tx", frequency: 100.25 }
+    });
+  });
+
+  it("reports an invalid frequency before a missing name", () => {
+    expect(
+      normalizeStation({ name: "", frequency: "abc" }, { requireName: true })
+        .error
+    ).toBe(frequencyError);
   });
 
   it("handles missing properties without throwing", () => {

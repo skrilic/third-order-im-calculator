@@ -14,11 +14,13 @@ function AppHeader() {
           <div className="brand-logo-container">
             <img
               src="/images/app_icon_minimal.png"
-              alt="TOIC Logo"
+              alt="Intermod RF Sites"
               className="brand-logo-img"
             />
-            <span className="brand-name">TOIC</span>
-            <span className="brand-badge">RF IM3</span>
+            {/* The badge completes the name: "Intermod" is what people say,
+                "RF Sites" is the rest of what the store lists. */}
+            <span className="brand-name">Intermod</span>
+            <span className="brand-badge">RF Sites</span>
           </div>
         </IonTitle>
         <IonButtons slot="end">

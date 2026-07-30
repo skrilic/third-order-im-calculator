@@ -42,7 +42,7 @@ import { downloadBlob } from "../utils/download";
 import { useI18n } from "../i18n/I18nProvider";
 
 function backupFilename(date) {
-  return `toic-backup-${date
+  return `intermod-backup-${date
     .toISOString()
     .replaceAll(":", "-")
     .replace(/\u002e\d{3}Z$/, "Z")}.json`;

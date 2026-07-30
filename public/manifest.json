@@ -1,6 +1,6 @@
 {
-    "name": "TOIC",
-    "description": "3rd order intermodulation products calculator",
+    "name": "Intermod RF Sites",
+    "description": "Transmitter site register and third-order intermodulation calculator",
     "version": "1.2",
     "manifest_version": 3,
     "optional_permissions": [

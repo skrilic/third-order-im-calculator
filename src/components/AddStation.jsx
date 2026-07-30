@@ -13,10 +13,20 @@ import { useI18n } from "../i18n/I18nProvider";
 
 const emptyStation = {
   name: "",
-  frequency: ""
+  frequency: "",
+  stationClass: ""
 };
 
-function AddStation({ onAddStation }) {
+/**
+ * `withStationClass` and `requireName` are on when the stations being added can
+ * end up in the transmitters store: that store records the ITU station class
+ * and refuses nameless transmitters.
+ */
+function AddStation({
+  onAddStation,
+  withStationClass = false,
+  requireName = false
+}) {
   const { t } = useI18n();
   const [station, setStation] = useState(emptyStation);
   const [error, setError] = useState("");
@@ -24,7 +34,7 @@ function AddStation({ onAddStation }) {
   function handleSubmit(event) {
     event.preventDefault();
 
-    const normalized = normalizeStation(station);
+    const normalized = normalizeStation(station, { requireName });
     if (normalized.error) {
       setError(t(normalized.error));
       return;
@@ -50,7 +60,9 @@ function AddStation({ onAddStation }) {
           <IonInput
             label={t("station.name")}
             labelPlacement="stacked"
-            placeholder={t("station.optional")}
+            placeholder={
+              requireName ? t("station.required") : t("station.optional")
+            }
             value={station.name}
             onIonInput={(event) =>
               updateStation("name", event.detail.value)
@@ -69,6 +81,17 @@ function AddStation({ onAddStation }) {
               updateStation("frequency", event.detail.value)
             }
           />
+          {withStationClass ? (
+            <IonInput
+              label={t("transmitter.stationClass")}
+              labelPlacement="stacked"
+              placeholder={t("transmitter.stationClassHint")}
+              value={station.stationClass}
+              onIonInput={(event) =>
+                updateStation("stationClass", event.detail.value)
+              }
+            />
+          ) : null}
           <IonButton
             type="submit"
             aria-label={t("station.addAria")}
