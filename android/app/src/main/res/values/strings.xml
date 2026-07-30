@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Intermod RF Sites</string>
+    <string name="title_activity_main">Intermod RF Sites</string>
+    <string name="package_name">third.order.im.calculator</string>
+    <string name="custom_url_scheme">third.order.im.calculator</string>
+</resources>
