@@ -3,7 +3,6 @@ import {
   IonButton,
   IonButtons,
   IonContent,
-  IonFooter,
   IonHeader,
   IonInput,
   IonModal,
@@ -75,20 +74,19 @@ function AdhocSaveModal({ isOpen, onDismiss, onSave }) {
               <p>{error}</p>
             </IonText>
           ) : null}
+          {/* Actions stay inside the scrollable content: an ion-footer is laid
+              out against the full sheet height, which puts it below the
+              viewport at every breakpoint. */}
+          <div className="form-actions">
+            <IonButton fill="clear" type="button" onClick={onDismiss}>
+              {t("common.cancel")}
+            </IonButton>
+            <IonButton type="submit" disabled={saving}>
+              {saving ? t("common.saving") : t("common.save")}
+            </IonButton>
+          </div>
         </form>
       </IonContent>
-      <IonFooter>
-        <IonToolbar>
-          <IonButton
-            slot="end"
-            type="submit"
-            form="adhoc-save-form"
-            disabled={saving}
-          >
-            {saving ? t("common.saving") : t("common.save")}
-          </IonButton>
-        </IonToolbar>
-      </IonFooter>
     </IonModal>
   );
 }

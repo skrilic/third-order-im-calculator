@@ -4,7 +4,6 @@ import {
   IonButton,
   IonButtons,
   IonContent,
-  IonFooter,
   IonHeader,
   IonIcon,
   IonItem,
@@ -16,8 +15,14 @@ import {
   IonToolbar
 } from "@ionic/react";
 import { documentTextOutline, mapOutline } from "ionicons/icons";
-import { parseGeoFile } from "../domain/geoParsers";
+import {
+  IMPORT_PROFILE,
+  IMPORT_PROFILE_VERSION,
+  parseGeoImport
+} from "../domain/geoImport";
 import { useI18n } from "../i18n/I18nProvider";
+
+const MAX_VISIBLE_ERRORS = 12;
 
 function GeoImportModal({ isOpen, onDismiss, onImport }) {
   const { t } = useI18n();
@@ -25,6 +30,7 @@ function GeoImportModal({ isOpen, onDismiss, onImport }) {
   const [fileName, setFileName] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [error, setError] = useState("");
+  const [errorDetails, setErrorDetails] = useState([]);
   const [importing, setImporting] = useState(false);
 
   function handleFileChange(event) {
@@ -36,20 +42,18 @@ function GeoImportModal({ isOpen, onDismiss, onImport }) {
 
     setFileName(file.name);
     setError("");
+    setErrorDetails([]);
 
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const text = e.target?.result ?? "";
-        const result = parseGeoFile(String(text), file.name);
-        if (result.locations.length === 0) {
-          setError(t("errors.geoNoValidLocations"));
-          setParsedData(null);
-        } else {
-          setParsedData(result);
-        }
+        setParsedData(parseGeoImport(String(text)));
       } catch (parseErr) {
-        setError(parseErr.message ? t(parseErr.message) : t("errors.geoParseFailed"));
+        setError(
+          parseErr.message ? t(parseErr.message) : t("errors.geoImportFailed")
+        );
+        setErrorDetails(parseErr.details ?? []);
         setParsedData(null);
       }
     };
@@ -69,6 +73,7 @@ function GeoImportModal({ isOpen, onDismiss, onImport }) {
       onDismiss();
     } catch (err) {
       setError(err.message ? t(err.message) : t("errors.unknown"));
+      setErrorDetails([]);
     } finally {
       setImporting(false);
     }
@@ -84,6 +89,7 @@ function GeoImportModal({ isOpen, onDismiss, onImport }) {
       onDidDismiss={() => {
         setParsedData(null);
         setError("");
+        setErrorDetails([]);
         setFileName("");
         onDismiss();
       }}
@@ -101,10 +107,18 @@ function GeoImportModal({ isOpen, onDismiss, onImport }) {
           <p style={{ fontSize: "0.9rem", color: "var(--ion-color-medium-shade)" }}>
             {t("geo.importHelp")}
           </p>
+          <p style={{ fontSize: "0.8rem", color: "var(--ion-color-medium-shade)" }}>
+            <code>
+              {t("geo.formatRequired", {
+                profile: IMPORT_PROFILE,
+                version: IMPORT_PROFILE_VERSION
+              })}
+            </code>
+          </p>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.geojson,.json"
+            accept=".geojson,.json"
             id="geo-file-input"
             style={{ display: "none" }}
             onChange={handleFileChange}
@@ -126,8 +140,29 @@ function GeoImportModal({ isOpen, onDismiss, onImport }) {
         </div>
 
         {error ? (
-          <IonText color="danger" style={{ display: "block", textAlign: "center" }}>
-            <p>{error}</p>
+          <IonText color="danger" style={{ display: "block" }}>
+            <p style={{ textAlign: "center" }}>{error}</p>
+            {errorDetails.length > 0 ? (
+              <>
+                <p style={{ fontWeight: 600, fontSize: "0.85rem" }}>
+                  {t("geo.errorDetails", { count: errorDetails.length })}
+                </p>
+                <ul style={{ fontSize: "0.8rem", paddingInlineStart: "1.2rem" }}>
+                  {errorDetails
+                    .slice(0, MAX_VISIBLE_ERRORS)
+                    .map((detail, index) => (
+                      <li key={index}>{detail}</li>
+                    ))}
+                </ul>
+                {errorDetails.length > MAX_VISIBLE_ERRORS ? (
+                  <p style={{ fontSize: "0.8rem" }}>
+                    {t("geo.errorDetailsTruncated", {
+                      count: errorDetails.length - MAX_VISIBLE_ERRORS
+                    })}
+                  </p>
+                ) : null}
+              </>
+            ) : null}
           </IonText>
         ) : null}
 
@@ -160,19 +195,19 @@ function GeoImportModal({ isOpen, onDismiss, onImport }) {
             </IonList>
           </div>
         ) : null}
-      </IonContent>
 
-      <IonFooter>
-        <IonToolbar>
+        {/* Action stays inside the scrollable content: an ion-footer is laid
+            out against the full sheet height, which puts it below the viewport
+            at every breakpoint. */}
+        <div className="form-actions">
           <IonButton
-            slot="end"
             disabled={!parsedData || importing}
             onClick={handleConfirmImport}
           >
             {importing ? t("common.saving") : t("geo.confirmImport")}
           </IonButton>
-        </IonToolbar>
-      </IonFooter>
+        </div>
+      </IonContent>
     </IonModal>
   );
 }

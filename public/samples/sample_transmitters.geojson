@@ -1,5 +1,9 @@
 {
   "type": "FeatureCollection",
+  "toic": {
+    "profile": "toic-sites",
+    "version": 1
+  },
   "features": [
     {
       "type": "Feature",
@@ -8,30 +12,83 @@
         "coordinates": [15.9481, 45.9002]
       },
       "properties": {
-        "name": "Sljeme Zagreb FM",
-        "frequency": 88.1
+        "siteId": "SLJEME-01",
+        "name": "Sljeme, Zagreb",
+        "transmitters": [
+          {
+            "name": "HRT 1",
+            "frequencyMhz": 92.1,
+            "organization": "HRT",
+            "stationClass": "BC",
+            "serviceType": "FM Broadcasting"
+          },
+          {
+            "name": "HRT 2",
+            "frequencyMhz": 98.5,
+            "organization": "HRT",
+            "stationClass": "BC",
+            "serviceType": "FM Broadcasting"
+          },
+          {
+            "name": "Radio 101",
+            "frequencyMhz": 101.1,
+            "organization": "Radio 101",
+            "stationClass": "BC",
+            "serviceType": "FM Broadcasting"
+          }
+        ]
       }
     },
     {
       "type": "Feature",
       "geometry": {
         "type": "Point",
-        "coordinates": [15.9481, 45.9002]
+        "coordinates": [14.2008, 45.2891, 1394]
       },
       "properties": {
-        "name": "Sljeme Zagreb FM2",
-        "frequency": 93.7
+        "siteId": "UCKA-01",
+        "name": "Učka, Istra",
+        "transmitters": [
+          {
+            "name": "Radio Istra",
+            "frequencyMhz": 98.0,
+            "organization": "Radio Istra",
+            "stationClass": "BC",
+            "serviceType": "FM Broadcasting"
+          },
+          {
+            "name": "HRT 3",
+            "frequencyMhz": 103.9,
+            "organization": "HRT",
+            "stationClass": "BC",
+            "serviceType": "FM Broadcasting"
+          }
+        ]
       }
     },
     {
       "type": "Feature",
       "geometry": {
         "type": "Point",
-        "coordinates": [18.4131, 43.8563]
+        "coordinates": [16.4172, 43.5081]
       },
       "properties": {
-        "name": "Trebević Sarajevo PMR",
-        "frequency": 145.625
+        "siteId": "MARJAN-01",
+        "name": "Marjan, Split",
+        "transmitters": [
+          {
+            "name": "Repetitor 2 m",
+            "frequencyMhz": 145.75,
+            "stationClass": "AT",
+            "serviceType": "Amateur"
+          },
+          {
+            "name": "Repetitor 70 cm",
+            "frequencyMhz": 438.8,
+            "stationClass": "AT",
+            "serviceType": "Amateur"
+          }
+        ]
       }
     }
   ]

@@ -1,5 +1,3 @@
-import { Capacitor } from "@capacitor/core";
-import { CapacitorSQLite, SQLiteConnection } from "@capacitor-community/sqlite";
 import { mergeSnapshots, validateBackup } from "../domain/backup";
 import {
   normalizeLocation,
@@ -11,64 +9,8 @@ const DATABASE_VERSION = 3;
 const LOCATION_STORE = "locations";
 const TRANSMITTER_STORE = "transmitters";
 const ADHOC_STORE = "adhocCalculations";
-const SQLITE_DB_NAME = "toic_sqlite_db";
 
 let indexedDbPromise;
-let sqliteConnection;
-let sqliteDb;
-
-// Check if running on native mobile device (iOS/Android)
-function isNativeSqliteAvailable() {
-  return Capacitor.isNativePlatform();
-}
-
-// Initialize SQLite connection and database schema
-async function getSqliteDatabase() {
-  if (sqliteDb) {
-    return sqliteDb;
-  }
-
-  if (!sqliteConnection) {
-    sqliteConnection = new SQLiteConnection(CapacitorSQLite);
-  }
-
-  sqliteDb = await sqliteConnection.createConnection(
-    SQLITE_DB_NAME,
-    false,
-    "no-encryption",
-    1,
-    false
-  );
-
-  await sqliteDb.open();
-
-  const createSchemaSql = `
-    PRAGMA foreign_keys = ON;
-    CREATE TABLE IF NOT EXISTS locations (
-      id TEXT PRIMARY KEY NOT NULL,
-      name TEXT NOT NULL,
-      latitude REAL NOT NULL,
-      longitude REAL NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS transmitters (
-      id TEXT PRIMARY KEY NOT NULL,
-      locationId TEXT NOT NULL,
-      name TEXT NOT NULL,
-      frequency REAL NOT NULL,
-      FOREIGN KEY (locationId) REFERENCES locations(id) ON DELETE CASCADE
-    );
-    CREATE TABLE IF NOT EXISTS adhoc_calculations (
-      id TEXT PRIMARY KEY NOT NULL,
-      name TEXT NOT NULL,
-      stationsJson TEXT NOT NULL,
-      createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
-    );
-  `;
-
-  await sqliteDb.execute(createSchemaSql);
-  return sqliteDb;
-}
 
 // Fallback IndexedDB engine helper functions
 function requestResult(request) {
@@ -88,10 +30,6 @@ function transactionComplete(transaction) {
 }
 
 export function openDatabase() {
-  if (isNativeSqliteAvailable()) {
-    return getSqliteDatabase();
-  }
-
   if (!globalThis.indexedDB) {
     return Promise.reject(new Error("errors.databaseUnavailable"));
   }
@@ -151,37 +89,6 @@ export function openDatabase() {
 }
 
 export async function getSnapshot() {
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    const locResult = await db.query("SELECT * FROM locations ORDER BY name ASC;");
-    const txResult = await db.query("SELECT * FROM transmitters ORDER BY name ASC;");
-    const adhocResult = await db.query("SELECT * FROM adhoc_calculations ORDER BY updatedAt DESC;");
-
-    const locations = (locResult.values || []).map((l) => ({
-      id: l.id,
-      name: l.name,
-      latitude: Number(l.latitude),
-      longitude: Number(l.longitude)
-    }));
-
-    const transmitters = (txResult.values || []).map((t) => ({
-      id: t.id,
-      locationId: t.locationId,
-      name: t.name,
-      frequency: Number(t.frequency)
-    }));
-
-    const adhocCalculations = (adhocResult.values || []).map((a) => ({
-      id: a.id,
-      name: a.name,
-      stations: JSON.parse(a.stationsJson || "[]"),
-      createdAt: a.createdAt,
-      updatedAt: a.updatedAt
-    }));
-
-    return { locations, transmitters, adhocCalculations };
-  }
-
   const database = await openDatabase();
   const stores = [LOCATION_STORE, TRANSMITTER_STORE];
   if (database.objectStoreNames.contains(ADHOC_STORE)) {
@@ -230,17 +137,6 @@ export async function saveLocation(input, existing) {
     throw new Error("errors.duplicateLocation");
   }
 
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    const loc = normalized.location;
-    const sql = `
-      INSERT OR REPLACE INTO locations (id, name, latitude, longitude)
-      VALUES (?, ?, ?, ?);
-    `;
-    await db.run(sql, [loc.id, loc.name, loc.latitude, loc.longitude]);
-    return loc;
-  }
-
   const database = await openDatabase();
   const transaction = database.transaction(LOCATION_STORE, "readwrite");
   transaction.objectStore(LOCATION_STORE).put(normalized.location);
@@ -249,13 +145,6 @@ export async function saveLocation(input, existing) {
 }
 
 export async function deleteLocation(locationId) {
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    await db.run("PRAGMA foreign_keys = ON;");
-    await db.run("DELETE FROM locations WHERE id = ?;", [locationId]);
-    return;
-  }
-
   const database = await openDatabase();
   const transaction = database.transaction(
     [LOCATION_STORE, TRANSMITTER_STORE],
@@ -363,39 +252,6 @@ export async function saveTransmitter(input, existing) {
     throw new Error(normalized.error);
   }
 
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    const locCheck = await db.query(
-      "SELECT id FROM locations WHERE id = ?;",
-      [normalized.transmitter.locationId]
-    );
-
-    if (!locCheck.values || locCheck.values.length === 0) {
-      throw new Error("errors.locationMissing");
-    }
-
-    const dupCheck = await db.query(
-      "SELECT id FROM transmitters WHERE locationId = ? AND frequency = ? AND id != ?;",
-      [
-        normalized.transmitter.locationId,
-        normalized.transmitter.frequency,
-        normalized.transmitter.id
-      ]
-    );
-
-    if (dupCheck.values && dupCheck.values.length > 0) {
-      throw new Error("errors.duplicateFrequency");
-    }
-
-    const tx = normalized.transmitter;
-    const sql = `
-      INSERT OR REPLACE INTO transmitters (id, locationId, name, frequency)
-      VALUES (?, ?, ?, ?);
-    `;
-    await db.run(sql, [tx.id, tx.locationId, tx.name, tx.frequency]);
-    return tx;
-  }
-
   const database = await openDatabase();
 
   return new Promise((resolve, reject) => {
@@ -482,12 +338,6 @@ export async function saveTransmitter(input, existing) {
 }
 
 export async function deleteTransmitter(transmitterId) {
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    await db.run("DELETE FROM transmitters WHERE id = ?;", [transmitterId]);
-    return;
-  }
-
   const database = await openDatabase();
   const transaction = database.transaction(
     TRANSMITTER_STORE,
@@ -521,22 +371,6 @@ export async function saveAdhocCalculation(input, existing = null) {
     updatedAt: now
   };
 
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    const sql = `
-      INSERT OR REPLACE INTO adhoc_calculations (id, name, stationsJson, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?);
-    `;
-    await db.run(sql, [
-      adhoc.id,
-      adhoc.name,
-      JSON.stringify(adhoc.stations),
-      adhoc.createdAt,
-      adhoc.updatedAt
-    ]);
-    return adhoc;
-  }
-
   const database = await openDatabase();
   const transaction = database.transaction(ADHOC_STORE, "readwrite");
   transaction.objectStore(ADHOC_STORE).put(adhoc);
@@ -545,12 +379,6 @@ export async function saveAdhocCalculation(input, existing = null) {
 }
 
 export async function deleteAdhocCalculation(adhocId) {
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    await db.run("DELETE FROM adhoc_calculations WHERE id = ?;", [adhocId]);
-    return;
-  }
-
   const database = await openDatabase();
   const transaction = database.transaction(ADHOC_STORE, "readwrite");
   transaction.objectStore(ADHOC_STORE).delete(adhocId);
@@ -563,41 +391,6 @@ export async function getAdhocCalculations() {
 }
 
 async function writeSnapshot(snapshot) {
-  if (isNativeSqliteAvailable()) {
-    const db = await getSqliteDatabase();
-    await db.run("DELETE FROM transmitters;");
-    await db.run("DELETE FROM locations;");
-    await db.run("DELETE FROM adhoc_calculations;");
-
-    for (const loc of snapshot.locations || []) {
-      await db.run(
-        "INSERT INTO locations (id, name, latitude, longitude) VALUES (?, ?, ?, ?);",
-        [loc.id, loc.name, loc.latitude, loc.longitude]
-      );
-    }
-
-    for (const tx of snapshot.transmitters || []) {
-      await db.run(
-        "INSERT INTO transmitters (id, locationId, name, frequency) VALUES (?, ?, ?, ?);",
-        [tx.id, tx.locationId, tx.name, tx.frequency]
-      );
-    }
-
-    for (const adhoc of snapshot.adhocCalculations || []) {
-      await db.run(
-        "INSERT INTO adhoc_calculations (id, name, stationsJson, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?);",
-        [
-          adhoc.id,
-          adhoc.name,
-          JSON.stringify(adhoc.stations || []),
-          adhoc.createdAt || new Date().toISOString(),
-          adhoc.updatedAt || new Date().toISOString()
-        ]
-      );
-    }
-    return;
-  }
-
   const database = await openDatabase();
   const stores = [LOCATION_STORE, TRANSMITTER_STORE];
   if (database.objectStoreNames.contains(ADHOC_STORE)) {

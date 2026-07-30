@@ -93,26 +93,37 @@ not yet included; add the selected platform before running sync/open commands.
 
 - [User guide](docs/index.md)
 - [Location database and backup guide](docs/DATA_MANAGEMENT.md)
+- [Transmitter import format specification](docs/IMPORT_FORMAT.md)
 - [Sample test data and external databases](docs/SAMPLES_DATA.md)
 - [Geolocation integration and native permissions](docs/GEOLOCATION.md)
 - [Development and distribution guide](docs/DEVELOPMENT.md)
 - [Architecture and project analysis](docs/PROJECT_ANALYSIS.md)
 - [Vite and Ionic migration record](docs/MIGRATION_VITE_IONIC.md)
 
-## Sample Test Data
+## Transmitter import
 
-For testing the GeoJSON/CSV transmitter importer, ready-to-use sample files are provided in `public/samples/`:
-- `public/samples/sample_transmitters.csv`
-- `public/samples/sample_transmitters.geojson`
+The importer accepts exactly one format: the `toic-sites` GeoJSON profile, one
+Point feature per site with its transmitters nested in the feature properties.
+Files that do not match are rejected in full with a list of every problem found —
+there is no format sniffing and no partial import. See
+[docs/IMPORT_FORMAT.md](docs/IMPORT_FORMAT.md) for the specification.
 
-See [docs/SAMPLES_DATA.md](docs/SAMPLES_DATA.md) for details and external database references.
+A valid sample is provided in `public/samples/sample_transmitters.geojson`. Flat,
+one-row-per-transmitter regulator exports can be reshaped with:
+
+```bash
+node scripts/convert-regulator-export.mjs <input.json> [output.geojson]
+```
+
+See [docs/SAMPLES_DATA.md](docs/SAMPLES_DATA.md) for external database references.
 
 ## Current limitations
 
 - Manual calculation entries are held only in memory and disappear on refresh;
-  saved locations and transmitters persist in SQLite (or IndexedDB in browser).
-- IndexedDB/SQLite storage is local to each browser profile, extension origin, or native
+  saved locations and transmitters persist in IndexedDB.
+- IndexedDB storage is local to each browser profile, extension origin, or native
   WebView. Use JSON export to move or preserve data.
-- Frequency units are not enforced.
+- Frequency units are not enforced in manual entry; the import format requires
+  MHz via the `frequencyMhz` field.
 - Equal output frequencies are retained as separate formula products.
 - Native Android and iOS platform projects are not part of the repository.
