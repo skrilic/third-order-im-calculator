@@ -45,7 +45,7 @@ GLAVNE ZNAČAJKE:
 • Radi bez internetske veze.
 
 PODRŠKA ZA JEZIKE:
-• Hrvatski književni jezik
+• Hrvatski jezik
 • Engleski jezik
 
 Preuzmite Intermod RF Sites i olakšajte planiranje te rješavanje smetnji na vašim radijskim lokacijama!
