@@ -27,8 +27,8 @@ export const seedSites = {
         ]
       },
       "properties": {
-        "siteId": "FORTICA-01",
-        "name": "FORTICA-01",
+        "siteId": "SAMPLE-BA-01",
+        "name": "SAMPLE-BA-01",
         "transmitters": [
           {
             "name": "BH Radio 1",
@@ -83,8 +83,8 @@ export const seedSites = {
         ]
       },
       "properties": {
-        "siteId": "GRDONJ-01",
-        "name": "GRDONJ-01",
+        "siteId": "SAMPLE-BA-02",
+        "name": "SAMPLE-BA-02",
         "transmitters": [
           {
             "name": "NRTV studio 99",
@@ -149,8 +149,8 @@ export const seedSites = {
         ]
       },
       "properties": {
-        "siteId": "SIBOVI-01",
-        "name": "SIBOVI-01",
+        "siteId": "SAMPLE-BA-03",
+        "name": "SAMPLE-BA-03",
         "transmitters": [
           {
             "name": "RTV Herceg Bosna",
