@@ -1,9 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   applyThemePreference,
+  MAP_LAYER_STORAGE_KEY,
+  MAP_THEME_STORAGE_KEY,
+  normalizeMapLayerPreference,
   normalizeThemePreference,
+  readMapLayerPreference,
+  readMapThemePreference,
   readThemePreference,
+  resolveMapTheme,
   resolveTheme,
+  storeMapLayerPreference,
+  storeMapThemePreference,
   storeThemePreference,
   THEME_STORAGE_KEY
 } from "./themePreference";
@@ -15,8 +23,18 @@ describe("theme preference", () => {
     ["dark", "dark"],
     ["unknown", "system"],
     [null, "system"]
-  ])("normalizes %s to %s", (input, expected) => {
+  ])("normalizes theme %s to %s", (input, expected) => {
     expect(normalizeThemePreference(input)).toBe(expected);
+  });
+
+  it.each([
+    ["standard", "standard"],
+    ["satellite", "satellite"],
+    ["topographic", "topographic"],
+    ["unknown", "standard"],
+    [null, "standard"]
+  ])("normalizes map layer %s to %s", (input, expected) => {
+    expect(normalizeMapLayerPreference(input)).toBe(expected);
   });
 
   it("resolves the system preference from the media query", () => {
@@ -29,7 +47,7 @@ describe("theme preference", () => {
     expect(resolveTheme("dark", false)).toBe("dark");
   });
 
-  it("reads, validates, and writes the preference", () => {
+  it("reads, validates, and writes the app theme preference", () => {
     const storage = {
       getItem: vi.fn(() => "dark"),
       setItem: vi.fn()
@@ -41,6 +59,39 @@ describe("theme preference", () => {
       THEME_STORAGE_KEY,
       "light"
     );
+  });
+
+  it("reads, validates, and writes the map theme preference", () => {
+    const storage = {
+      getItem: vi.fn(() => "light"),
+      setItem: vi.fn()
+    };
+
+    expect(readMapThemePreference(storage)).toBe("light");
+    expect(storeMapThemePreference("dark", storage)).toBe("dark");
+    expect(storage.setItem).toHaveBeenCalledWith(
+      MAP_THEME_STORAGE_KEY,
+      "dark"
+    );
+  });
+
+  it("reads, validates, and writes the map layer preference", () => {
+    const storage = {
+      getItem: vi.fn(() => "satellite"),
+      setItem: vi.fn()
+    };
+
+    expect(readMapLayerPreference(storage)).toBe("satellite");
+    expect(storeMapLayerPreference("topographic", storage)).toBe("topographic");
+    expect(storage.setItem).toHaveBeenCalledWith(
+      MAP_LAYER_STORAGE_KEY,
+      "topographic"
+    );
+  });
+
+  it("resolves map theme independently", () => {
+    expect(resolveMapTheme("system", true)).toBe("dark");
+    expect(resolveMapTheme("light", true)).toBe("light");
   });
 
   it("applies the resolved class and browser color scheme", () => {

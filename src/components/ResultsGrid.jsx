@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  IonButton,
   IonCard,
   IonCardContent,
   IonCardHeader,
@@ -19,6 +18,14 @@ import { AgGridReact } from "ag-grid-react";
 import { themeAlpine } from "ag-grid-community";
 import ExportCSV from "./ExportCSV";
 import { useI18n } from "../i18n/I18nProvider";
+
+export function parseNumberFilterInput(text) {
+  if (text == null) return null;
+  const cleaned = String(text).trim().replace(",", ".");
+  if (cleaned === "") return null;
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? null : num;
+}
 
 function ResultsGrid({ rows }) {
   const { t } = useI18n();
@@ -50,13 +57,19 @@ function ResultsGrid({ rows }) {
       {
         headerName: t("results.frequency"),
         field: "frequency",
-        filter: "agTextColumnFilter",
-        width: 150,
+        filter: "agNumberColumnFilter",
+        filterParams: {
+          numberParser: parseNumberFilterInput
+        },
+        valueGetter: (params) =>
+          params.data?.frequency != null
+            ? Number(params.data.frequency)
+            : null,
         valueFormatter: ({ value }) =>
           value === null || value === undefined || value === ""
             ? ""
             : Number(value).toFixed(2),
-        comparator: (valueA, valueB) => Number(valueA) - Number(valueB)
+        width: 160
       }
     ],
     [t]
@@ -77,6 +90,13 @@ function ResultsGrid({ rows }) {
       filterOoo: t("grid.filter"),
       equals: t("grid.equals"),
       notEqual: t("grid.notEqual"),
+      greaterThan: t("grid.greaterThan"),
+      greaterThanOrEqual: t("grid.greaterThanOrEqual"),
+      lessThan: t("grid.lessThan"),
+      lessThanOrEqual: t("grid.lessThanOrEqual"),
+      inRange: t("grid.inRange"),
+      inRangeStart: t("grid.inRangeStart"),
+      inRangeEnd: t("grid.inRangeEnd"),
       blank: t("grid.blank"),
       notBlank: t("grid.notBlank"),
       contains: t("grid.contains"),

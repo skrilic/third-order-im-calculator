@@ -10,8 +10,8 @@ function HomePage() {
   return (
     <IonPage>
       <AppHeader />
-      <IonContent className="calculator-content">
-        <main className="calculator-shell" style={{ padding: "8px" }}>
+      <IonContent className="calculator-content" scrollY={false}>
+        <main className="calculator-shell calculator-shell--fixed" style={{ padding: "8px" }}>
           <LocationManager
             onCalculate={(locationId) =>
               navigateTo(

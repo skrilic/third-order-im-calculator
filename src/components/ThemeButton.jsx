@@ -12,7 +12,9 @@ import {
 } from "ionicons/icons";
 import {
   applyThemePreference,
+  readMapThemePreference,
   readThemePreference,
+  storeMapThemePreference,
   storeThemePreference
 } from "../theme/themePreference";
 import { useI18n } from "../i18n/I18nProvider";
@@ -35,15 +37,33 @@ const themeOptions = [
   }
 ];
 
-function ThemeButton() {
+function ThemeButton({ mode = "app" }) {
   const { t } = useI18n();
-  const [preference, setPreference] = useState(readThemePreference);
+  const readFn = mode === "map" ? readMapThemePreference : readThemePreference;
+  const storeFn = mode === "map" ? storeMapThemePreference : storeThemePreference;
+
+  const [preference, setPreference] = useState(readFn);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia?.(
-      "(prefers-color-scheme: dark)"
-    );
+    setPreference(readFn());
+  }, [mode]);
+
+  useEffect(() => {
+    const eventName = mode === "map" ? "toic-map-theme-change" : "toic-theme-change";
+
+    function handleExternalChange() {
+      setPreference(readFn());
+    }
+
+    window.addEventListener(eventName, handleExternalChange);
+    return () => window.removeEventListener(eventName, handleExternalChange);
+  }, [mode]);
+
+  useEffect(() => {
+    if (mode !== "app") return;
+
+    const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
 
     function applyTheme() {
       applyThemePreference(
@@ -55,18 +75,20 @@ function ThemeButton() {
 
     applyTheme();
     mediaQuery?.addEventListener?.("change", applyTheme);
-    return () =>
-      mediaQuery?.removeEventListener?.("change", applyTheme);
-  }, [preference]);
+    return () => mediaQuery?.removeEventListener?.("change", applyTheme);
+  }, [mode, preference]);
 
   function selectTheme(nextPreference) {
-    const stored = storeThemePreference(nextPreference);
+    const stored = storeFn(nextPreference);
     setPreference(stored);
   }
 
   const activeOption =
     themeOptions.find((option) => option.value === preference) ??
     themeOptions[0];
+
+  const headerText = mode === "map" ? t("theme.mapAppearance") : t("theme.appearance");
+  const subHeaderText = mode === "map" ? t("theme.mapDescription") : t("theme.description");
 
   return (
     <>
@@ -80,8 +102,8 @@ function ThemeButton() {
       </IonButton>
       <IonActionSheet
         isOpen={isOpen}
-        header={t("theme.appearance")}
-        subHeader={t("theme.description")}
+        header={headerText}
+        subHeader={subHeaderText}
         onDidDismiss={() => setIsOpen(false)}
         buttons={[
           ...themeOptions.map((option) => ({

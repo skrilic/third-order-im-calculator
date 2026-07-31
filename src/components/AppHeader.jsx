@@ -24,7 +24,7 @@ function AppHeader() {
           </div>
         </IonTitle>
         <IonButtons slot="end">
-          <ThemeButton />
+          <ThemeButton mode="app" />
         </IonButtons>
       </IonToolbar>
     </IonHeader>

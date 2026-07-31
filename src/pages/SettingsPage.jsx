@@ -15,11 +15,13 @@ import {
 import {
   colorPaletteOutline,
   informationCircleOutline,
-  languageOutline
+  languageOutline,
+  layersOutline
 } from "ionicons/icons";
 import AppHeader from "../components/AppHeader";
 import AppTabBar from "../components/AppTabBar";
 import BackupManager from "../components/BackupManager";
+import MapLayerButton from "../components/MapLayerButton";
 import ThemeButton from "../components/ThemeButton";
 import { getSnapshot } from "../data/database";
 import packageInfo from "../../package.json";
@@ -82,9 +84,16 @@ function SettingsPage() {
             </IonItem>
             <IonItem>
               <IonIcon slot="start" icon={colorPaletteOutline} color="primary" />
-              <IonLabel>{t("theme.appearance")}</IonLabel>
+              <IonLabel>{t("theme.mapAppearance")}</IonLabel>
               <div slot="end">
-                <ThemeButton />
+                <ThemeButton mode="map" />
+              </div>
+            </IonItem>
+            <IonItem>
+              <IonIcon slot="start" icon={layersOutline} color="primary" />
+              <IonLabel>{t("theme.mapLayer")}</IonLabel>
+              <div slot="end">
+                <MapLayerButton />
               </div>
             </IonItem>
           </IonList>

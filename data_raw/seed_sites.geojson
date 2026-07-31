@@ -19,42 +19,42 @@
         "name": "FORTICA-01",
         "transmitters": [
           {
-            "name": "BH Radio 1 - Fortica",
+            "name": "BH Radio 1",
             "frequencyMhz": 97.3,
             "stationClass": "BC"
           },
           {
-            "name": "Radio FBiH - Fortica",
+            "name": "Radio FBiH",
             "frequencyMhz": 91.7,
             "stationClass": "BC"
           },
           {
-            "name": "RSG - Fortica",
+            "name": "RSG",
             "frequencyMhz": 104.3,
             "stationClass": "BC"
           },
           {
-            "name": "RTV Mostar - Fortica",
+            "name": "RTV Mostar",
             "frequencyMhz": 97.9,
             "stationClass": "BC"
           },
           {
-            "name": "Studio 88 - Fortica",
+            "name": "Studio 88",
             "frequencyMhz": 104.6,
             "stationClass": "BC"
           },
           {
-            "name": "Kalman - Fortica",
+            "name": "Kalman",
             "frequencyMhz": 90,
             "stationClass": "BC"
           },
           {
-            "name": "Omladinski radio X - Fortica",
+            "name": "Omladinski radio X",
             "frequencyMhz": 88.6,
             "stationClass": "BC"
           },
           {
-            "name": "Otvorena mreza - Fortica",
+            "name": "Otvorena mreza",
             "frequencyMhz": 94,
             "stationClass": "BC"
           }
@@ -75,52 +75,52 @@
         "name": "GRDONJ-01",
         "transmitters": [
           {
-            "name": "NRTV studio 99 - Grdonj",
+            "name": "NRTV studio 99",
             "frequencyMhz": 99.8,
             "stationClass": "BC"
           },
           {
-            "name": "RTV Glas Bosne - Grdonj",
+            "name": "RTV Glas Bosne",
             "frequencyMhz": 106.8,
             "stationClass": "BC"
           },
           {
-            "name": "RTV Vogosca - Grdonj",
+            "name": "RTV Vogosca",
             "frequencyMhz": 88.2,
             "stationClass": "BC"
           },
           {
-            "name": "Studentski eFM radio - Grdonj",
+            "name": "Studentski eFM radio",
             "frequencyMhz": 95.2,
             "stationClass": "BC"
           },
           {
-            "name": "Radio ASK - Grdonj",
+            "name": "Radio ASK",
             "frequencyMhz": 89.9,
             "stationClass": "BC"
           },
           {
-            "name": "Radio Kameleon - Grdonj",
+            "name": "Radio Kameleon",
             "frequencyMhz": 101.2,
             "stationClass": "BC"
           },
           {
-            "name": "Radio postaja Vrhbosna - Grdonj",
+            "name": "Radio postaja Vrhbosna",
             "frequencyMhz": 90.5,
             "stationClass": "BC"
           },
           {
-            "name": "Radio Zid - Grdonj",
+            "name": "Radio Zid",
             "frequencyMhz": 90.2,
             "stationClass": "BC"
           },
           {
-            "name": "Kalman - Grdonj",
+            "name": "Kalman",
             "frequencyMhz": 91.5,
             "stationClass": "BC"
           },
           {
-            "name": "Otvorena mreza - Grdonj",
+            "name": "Otvorena mreza",
             "frequencyMhz": 106.2,
             "stationClass": "BC"
           }
@@ -141,37 +141,37 @@
         "name": "SIBOVI-01",
         "transmitters": [
           {
-            "name": "RTV Herceg Bosna - Sibovi",
+            "name": "RTV Herceg Bosna",
             "frequencyMhz": 103.5,
             "stationClass": "BC"
           },
           {
-            "name": "Radio Demofest - Sibovi",
+            "name": "Radio Demofest",
             "frequencyMhz": 102.7,
             "stationClass": "BC"
           },
           {
-            "name": "Pink BH - Sibovi",
+            "name": "Pink BH",
             "frequencyMhz": 107.1,
             "stationClass": "BC"
           },
           {
-            "name": "Otvorena mreza - Sibovi",
+            "name": "Otvorena mreza",
             "frequencyMhz": 101.4,
             "stationClass": "BC"
           },
           {
-            "name": "Radio Balkan - Sibovi",
+            "name": "Radio Balkan",
             "frequencyMhz": 95.9,
             "stationClass": "BC"
           },
           {
-            "name": "RTV BN - Sibovi",
+            "name": "RTV BN",
             "frequencyMhz": 99.9,
             "stationClass": "BC"
           },
           {
-            "name": "Radio Kontakt - Sibovi",
+            "name": "Radio Kontakt",
             "frequencyMhz": 90,
             "stationClass": "BC"
           }

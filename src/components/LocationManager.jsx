@@ -33,6 +33,7 @@ import {
 import LocationDetailsModal from "./LocationDetailsModal";
 import LocationFormModal from "./LocationFormModal";
 import LocationMap from "./LocationMap";
+import MapLayerButton from "./MapLayerButton";
 import {
   translateError,
   useI18n
@@ -145,51 +146,54 @@ function LocationManager({ onCalculate }) {
 
   return (
     <div className="dashboard-layout">
-      {/* Map Column / Section */}
-      <div className="dashboard-map-section">
-        <div className="location-map-wrapper">
-          <div className="location-map-floating-controls">
-            <IonButton
-              size="small"
-              shape="round"
-              className="fab-location-btn"
-              color="primary"
-              disabled={locating}
-              onClick={centerOnDevice}
-            >
-              {locating ? (
-                <IonSpinner slot="start" name="crescent" />
-              ) : (
-                <IonIcon slot="start" icon={locateOutline} />
-              )}
-              {locating
-                ? t("locations.locating")
-                : t("locations.center")}
-            </IonButton>
-            {locationStatus ? (
-              <div className="location-status-badge">
-                {locationStatus}
-              </div>
-            ) : null}
+      {/* Fixed Top Section: Map + Add Location Row */}
+      <div className="dashboard-fixed-top">
+        <div className="dashboard-map-section">
+          <div className="location-map-wrapper">
+            <div className="location-map-floating-controls">
+              <MapLayerButton
+                size="small"
+                shape="round"
+                className="fab-location-btn"
+                color="primary"
+              />
+              <IonButton
+                size="small"
+                shape="round"
+                className="fab-location-btn"
+                color="primary"
+                disabled={locating}
+                onClick={centerOnDevice}
+              >
+                {locating ? (
+                  <IonSpinner slot="start" name="crescent" />
+                ) : (
+                  <IonIcon slot="start" icon={locateOutline} />
+                )}
+                {locating
+                  ? t("locations.locating")
+                  : t("locations.center")}
+              </IonButton>
+              {locationStatus ? (
+                <div className="location-status-badge">
+                  {locationStatus}
+                </div>
+              ) : null}
+            </div>
+            <LocationMap
+              locations={snapshot.locations}
+              selectedLocationId={activeLocationId}
+              userPosition={userPosition}
+              focusRequest={focusRequest}
+              onMapClick={setNewCoordinates}
+              onMarkerClick={(location) =>
+                setActiveLocationId(location.id)
+              }
+            />
           </div>
-          <LocationMap
-            locations={snapshot.locations}
-            selectedLocationId={activeLocationId}
-            userPosition={userPosition}
-            focusRequest={focusRequest}
-            onMapClick={setNewCoordinates}
-            onMarkerClick={(location) =>
-              setActiveLocationId(location.id)
-            }
-          />
         </div>
-      </div>
 
-      {/* Saved Locations List Section */}
-      <div className="dashboard-list-section">
-        {/* Tapping the map is the quickest way in, but it is invisible until
-            someone tries it, so the same action is offered as a button. Empty
-            coordinates open the form with editable latitude and longitude. */}
+        {/* Add Location Row */}
         <div className="location-add-row">
           <IonButton
             size="small"
@@ -204,7 +208,10 @@ function LocationManager({ onCalculate }) {
             {t("locations.addNewHint")}
           </span>
         </div>
+      </div>
 
+      {/* Scrollable Saved Locations List Section */}
+      <div className="dashboard-list-section dashboard-list-section--scrollable">
         <IonList inset={true} className="dashboard-locations-list">
           <IonListHeader>
             <IonLabel>{t("locations.cardTitle")}</IonLabel>

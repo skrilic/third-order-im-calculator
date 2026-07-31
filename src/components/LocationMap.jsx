@@ -8,6 +8,7 @@ import {
   useMapEvents
 } from "react-leaflet";
 import { useI18n } from "../i18n/I18nProvider";
+import { useMapLayer, useMapTheme } from "../theme/themePreference";
 import { centerMapOnPosition } from "../utils/mapView";
 
 const DEFAULT_CENTER = [43.772643, 17.781372];
@@ -20,37 +21,15 @@ const CARTO_DARK_URL =
 const CARTO_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-function checkIsDark() {
-  return document.documentElement.classList.contains("ion-palette-dark");
-}
+const ESRI_SATELLITE_URL =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const ESRI_SATELLITE_ATTRIBUTION =
+  "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community";
 
-function useDarkMode() {
-  const [isDark, setIsDark] = useState(checkIsDark);
-
-  useEffect(() => {
-    const updateTheme = () => {
-      setIsDark(checkIsDark());
-    };
-
-    const observer = new MutationObserver(updateTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"]
-    });
-
-    const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
-    mediaQuery?.addEventListener?.("change", updateTheme);
-
-    updateTheme();
-
-    return () => {
-      observer.disconnect();
-      mediaQuery?.removeEventListener?.("change", updateTheme);
-    };
-  }, []);
-
-  return isDark;
-}
+const OPENTOPOMAP_URL =
+  "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+const OPENTOPOMAP_ATTRIBUTION =
+  'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>';
 
 function MapResizer() {
   const map = useMap();
@@ -71,11 +50,13 @@ function MapResizer() {
     };
 
     window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
     };
   }, [map]);
 
@@ -156,8 +137,25 @@ function LocationMap({
   onMarkerClick
 }) {
   const { t } = useI18n();
-  const isDark = useDarkMode();
-  const tileUrl = isDark ? CARTO_DARK_URL : CARTO_VOYAGER_URL;
+  const mapTheme = useMapTheme();
+  const mapLayer = useMapLayer();
+
+  let tileUrl = mapTheme === "dark" ? CARTO_DARK_URL : CARTO_VOYAGER_URL;
+  let attribution = CARTO_ATTRIBUTION;
+  let maxZoom = 19;
+  let subdomains = "abcd";
+
+  if (mapLayer === "satellite") {
+    tileUrl = ESRI_SATELLITE_URL;
+    attribution = ESRI_SATELLITE_ATTRIBUTION;
+    maxZoom = 18;
+    subdomains = "abc";
+  } else if (mapLayer === "topographic") {
+    tileUrl = OPENTOPOMAP_URL;
+    attribution = OPENTOPOMAP_ATTRIBUTION;
+    maxZoom = 17;
+    subdomains = "abc";
+  }
 
   return (
     <div
@@ -171,10 +169,10 @@ function LocationMap({
       >
         <TileLayer
           key={tileUrl}
-          attribution={CARTO_ATTRIBUTION}
+          attribution={attribution}
           url={tileUrl}
-          subdomains="abcd"
-          maxZoom={19}
+          subdomains={subdomains}
+          maxZoom={maxZoom}
         />
         <MapResizer />
         <MapClickHandler onMapClick={onMapClick} />

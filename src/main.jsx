@@ -4,6 +4,7 @@ import { setupIonicReact } from "@ionic/react";
 import {
   ClientSideRowModelModule,
   ModuleRegistry,
+  NumberFilterModule,
   TextFilterModule
 } from "ag-grid-community";
 
@@ -33,7 +34,8 @@ applyThemePreference(
 document.documentElement.lang = readLanguage();
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
-  TextFilterModule
+  TextFilterModule,
+  NumberFilterModule
 ]);
 
 // Seeding runs before the first render so the map and the location list show
