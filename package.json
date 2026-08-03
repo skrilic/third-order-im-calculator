@@ -5,14 +5,14 @@
   "dependencies": {
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
-    "@mui/icons-material": "9.0.1",
-    "ag-grid-community": "35.2.1",
-    "ag-grid-react": "35.2.1",
-    "mui": "^0.0.1",
-    "react": "19.2.6",
-    "react-dom": "19.2.6",
+    "@mui/icons-material": "9.2.0",
+    "ag-grid-community": "36.0.2",
+    "ag-grid-react": "36.0.2",
+    "mui": "^1.0.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "react-papaparse": "^4.0.2",
-    "web-vitals": "5.2.0"
+    "web-vitals": "6.0.1"
   },
   "scripts": {
     "start": "react-scripts --openssl-legacy-provider start",
@@ -39,10 +39,10 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/jest-dom": "7.0.0",
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "^14.5.2",
-    "postcss": "8.5.14",
+    "postcss": "8.5.25",
     "react-scripts": "^5.0.1"
   },
   "overrides": {
@@ -60,7 +60,7 @@
     "css-minimizer-webpack-plugin": "8.0.0",
     "css-select": "7.0.0",
     "nth-check": "3.0.1",
-    "postcss": "8.5.14",
+    "postcss": "$postcss",
     "resolve-url-loader": "5.0.0",
     "rollup-plugin-terser": "7.0.2",
     "svgo": "4.0.1",
